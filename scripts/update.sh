@@ -28,17 +28,6 @@ fi
 
 echo ""
 
-# 2. Pull latest changes
-echo "📥 Pulling latest changes..."
-if [ -d ".git" ]; then
-    git pull origin main
-    echo "✅ Latest changes pulled"
-else
-    echo "⚠️  Not a git repository, skipping pull"
-fi
-
-echo ""
-
 # 3. Rebuild Docker image
 echo "🔨 Rebuilding Docker image..."
 docker compose -f docker/docker-compose.yml build
