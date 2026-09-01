@@ -360,11 +360,11 @@ pip install -r requirements.txt
 
 ### Database Errors
 ```bash
-# Check permissions
-ls -la data/
+# Check database is being stored in the named volume
+docker volume ls | grep bot_data
 
-# Reset database
-rm data/bot.db
+# Reset database (stored in Docker named volume)
+docker compose -f docker/docker-compose.yml exec yc-watcher-bot rm /app/data/bot.db
 docker compose restart
 ```
 

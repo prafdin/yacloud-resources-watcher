@@ -46,7 +46,7 @@ cd yacloud-resources-watcher
 
 ```bash
 # Create directories
-mkdir -p config data
+mkdir -p config
 
 # Copy config files
 cp config.yaml.example config/config.yaml

@@ -259,16 +259,16 @@ Database Errors:
 ## Backup Strategy
 
 ### What to Backup
-- SQLite database (data/bot.db)
+- SQLite database (named volume `bot_data`, `/app/data/bot.db` in container)
 - Configuration files (config/config.yaml)
 - Service account key (config/sa-key.json)
 
 ### Backup Frequency
-- Daily automated backup of data/
+- Daily automated backup of the `bot_data` volume
 - Manual backup before updates
 
 ### Restore Procedure
-1. Stop bot: `docker compose down`
-2. Restore data/ from backup
+1. Backup the current volume: `docker compose cp yc-watcher-bot:/app/data/bot.db ./bot.db.backup`
+2. Restore `bot.db` into the container: `docker compose cp bot.db.backup yc-watcher-bot:/app/data/bot.db`
 3. Start bot: `docker compose up -d`
 4. Verify operation

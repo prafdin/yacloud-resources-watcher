@@ -98,7 +98,7 @@ cd yacloud-resources-watcher
 
 ```bash
 # Create directories
-mkdir -p config data
+mkdir -p config
 
 # Copy config files
 cp config.yaml.example config/config.yaml
@@ -202,8 +202,9 @@ docker compose -f docker/docker-compose.yml down
 ### Manual Update
 
 ```bash
-# Backup data
-cp -r data backup_$(date +%Y%m%d)
+# Backup database from Docker named volume
+docker compose -f docker/docker-compose.yml cp \
+  yc-watcher-bot:/app/data/bot.db backup_$(date +%Y%m%d)/bot.db
 
 # Pull changes
 git pull origin main
@@ -294,8 +295,8 @@ SELECT COUNT(*) FROM notification_history;
 
 **Solutions:**
 1. Stop bot: `docker compose down`
-2. Backup current DB: `cp data/bot.db data/bot.db.backup`
-3. Reset database: `rm data/bot.db`
+2. Backup current DB: `docker compose -f docker/docker-compose.yml cp yc-watcher-bot:/app/data/bot.db ./bot.db.backup`
+3. Reset database: `docker compose -f docker/docker-compose.yml run --rm bot rm /app/data/bot.db` (or `docker volume rm` for full reset)
 4. Start bot: `docker compose up -d`
 
 ### Permission Denied
@@ -303,9 +304,9 @@ SELECT COUNT(*) FROM notification_history;
 **Symptoms:** "Permission denied" when accessing files
 
 **Solutions:**
-1. Check file ownership: `ls -la config/ data/`
-2. Fix permissions: `chmod 644 config/* data/*`
-3. Check Docker user: `docker exec yc-watcher-bot whoami`
+1. Check Docker user: `docker exec yc-watcher-bot whoami`
+2. Verify named volume works: `docker compose ls`
+3. Data is stored in a Docker named volume `bot_data`, not on the host filesystem
 
 ### No Resources Shown
 
@@ -322,30 +323,35 @@ SELECT COUNT(*) FROM notification_history;
 ### Backup
 
 ```bash
-# Backup data directory
-cp -r data backup_$(date +%Y%m%d)
+BACKUP_DIR=backup_$(date +%Y%m%d)
+mkdir -p $BACKUP_DIR
+
+# Backup database from Docker named volume
+docker compose -f docker/docker-compose.yml cp \
+  yc-watcher-bot:/app/data/bot.db $BACKUP_DIR/bot.db
 
 # Backup config
-cp config/config.yaml backup_$(date +%Y%m%d)/
+cp config/config.yaml $BACKUP_DIR/
 
 # Backup SA key (store securely!)
-cp config/sa-key.json backup_$(date +%Y%m%d)/
+cp config/sa-key.json $BACKUP_DIR/
 ```
 
 ### Restore
 
 ```bash
-# Stop bot
-docker compose -f docker/docker-compose.yml down
+# Start bot (named volume bot_data is created automatically)
+docker compose -f docker/docker-compose.yml up -d
 
-# Restore data
-cp -r backup_20240115/data data
+# Restore database into named volume
+docker compose -f docker/docker-compose.yml cp \
+  backup_20240115/bot.db yc-watcher-bot:/app/data/bot.db
 
 # Restore config (if needed)
 cp backup_20240115/config.yaml config/config.yaml
 
-# Start bot
-docker compose -f docker/docker-compose.yml up -d
+# Restart bot
+docker compose -f docker/docker-compose.yml restart
 ```
 
 ## Security Best Practices

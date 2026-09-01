@@ -9,9 +9,16 @@ echo "💾 Creating backup..."
 BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
 mkdir -p $BACKUP_DIR
 
-if [ -d "data" ]; then
-    cp -r data $BACKUP_DIR/
-    echo "✅ Backed up data directory to $BACKUP_DIR"
+if ! docker compose -f docker/docker-compose.yml ps -q &> /dev/null; then
+    echo "⚠️  Bot is not running, skipping database backup"
+else
+    echo "📦 Backing up database from named volume..."
+    if docker compose -f docker/docker-compose.yml cp \
+        yc-watcher-bot:/app/data/bot.db "$BACKUP_DIR/bot.db" 2>/dev/null; then
+        echo "✅ Backed up bot.db to $BACKUP_DIR/bot.db"
+    else
+        echo "⚠️  bot.db not found in volume, skipping"
+    fi
 fi
 
 if [ -f "config/config.yaml" ]; then
@@ -56,5 +63,5 @@ echo "📜 View logs with: docker compose -f docker/docker-compose.yml logs -f"
 echo ""
 echo "If you need to rollback:"
 echo "1. Stop bot: docker compose -f docker/docker-compose.yml down"
-echo "2. Restore data: cp -r $BACKUP_DIR/data data"
-echo "3. Start bot: docker compose -f docker/docker-compose.yml up -d"
+echo "2. Restore database: docker compose -f docker/docker-compose.yml up -d && docker compose -f docker/docker-compose.yml cp $BACKUP_DIR/bot.db yc-watcher-bot:/app/data/bot.db"
+echo "3. Restart bot: docker compose -f docker/docker-compose.yml restart"

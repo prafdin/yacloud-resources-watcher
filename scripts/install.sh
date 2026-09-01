@@ -24,7 +24,7 @@ echo ""
 
 # 2. Create directories
 echo "📁 Creating directories..."
-mkdir -p config data
+mkdir -p config
 echo "✅ Directories created"
 echo ""
 

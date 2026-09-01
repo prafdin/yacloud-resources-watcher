@@ -1057,7 +1057,7 @@ USER botuser
 # Read-only mounts in docker compose
 volumes:
   - ./config:/app/config:ro
-  - ./data:/app/data
+  - bot_data:/app/data
 
 # No privileged mode
 # No host network
@@ -1266,8 +1266,9 @@ services:
       # Config files (read-only)
       - ./config:/app/config:ro
       
-      # Data directory (writable for SQLite)
-      - ./data:/app/data
+      # Named volume for SQLite (Docker manages permissions
+      # so the non-root container user can write bot.db)
+      - bot_data:/app/data
       
       # Service account key (read-only)
       - ./config/sa-key.json:/app/config/sa-key.json:ro
@@ -1305,6 +1306,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+volumes:
+  bot_data:
 ```
 
 ### 11.3 Environment Variables
@@ -1344,7 +1348,7 @@ echo "✅ Prerequisites check passed"
 
 # 2. Create directories
 echo "📁 Creating directories..."
-mkdir -p config data
+mkdir -p config
 
 # 3. Generate config files
 echo "⚙️  Generating configuration files..."
@@ -1419,9 +1423,9 @@ echo "💾 Creating backup..."
 BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
 mkdir -p $BACKUP_DIR
 
-if [ -d "data" ]; then
-    cp -r data $BACKUP_DIR/
-    echo "✅ Backed up data directory to $BACKUP_DIR"
+if docker compose ps -q &> /dev/null; then
+    docker compose cp yc-watcher-bot:/app/data/bot.db "$BACKUP_DIR/bot.db"
+    echo "✅ Backed up bot.db to $BACKUP_DIR"
 fi
 
 # 2. Pull latest changes
@@ -1606,7 +1610,7 @@ cd yacloud-resources-watcher
 
 ```bash
 # Create directories
-mkdir -p config data
+mkdir -p config
 
 # Copy config files
 cp config.yaml.example config/config.yaml
@@ -1676,12 +1680,12 @@ yandex_cloud:
 
 ### Backup
 ```bash
-cp -r data backup_$(date +%Y%m%d)
+docker compose cp yc-watcher-bot:/app/data/bot.db backup_$(date +%Y%m%d)/bot.db
 ```
 
 ### Restore
 ```bash
-cp -r backup_20240115 data
+docker compose cp backup_20240115/bot.db yc-watcher-bot:/app/data/bot.db
 docker compose restart
 ```
 ```

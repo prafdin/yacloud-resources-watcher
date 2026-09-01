@@ -12,8 +12,9 @@ services:
       # Config files (read-only)
       - ../config:/app/config:ro
       
-      # Data directory (writable for SQLite)
-      - ../data:/app/data
+      # Named volume for SQLite (Docker manages permissions
+      # so a non-root container user can write bot.db)
+      - bot_data:/app/data
       
       # Service account key (read-only)
       - ../config/sa-key.json:/app/config/sa-key.json:ro
@@ -51,3 +52,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+volumes:
+  bot_data:
