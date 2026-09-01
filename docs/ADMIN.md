@@ -120,7 +120,7 @@ nano config/config.yaml
 cp /path/to/sa-key.json config/sa-key.json
 
 # Build and start
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## Configuration
@@ -179,16 +179,16 @@ logging:
 
 ```bash
 # Start bot
-docker-compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Check status
-docker-compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml ps
 
 # View logs
-docker-compose -f docker/docker-compose.yml logs -f
+docker compose -f docker/docker-compose.yml logs -f
 
 # Stop bot
-docker-compose -f docker/docker-compose.yml down
+docker compose -f docker/docker-compose.yml down
 ```
 
 ## Updating the Bot
@@ -209,7 +209,7 @@ cp -r data backup_$(date +%Y%m%d)
 git pull origin main
 
 # Rebuild and restart
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## Monitoring
@@ -218,20 +218,20 @@ docker-compose -f docker/docker-compose.yml up -d --build
 
 ```bash
 # Real-time logs
-docker-compose -f docker/docker-compose.yml logs -f
+docker compose -f docker/docker-compose.yml logs -f
 
 # Last 100 lines
-docker-compose -f docker/docker-compose.yml logs --tail=100
+docker compose -f docker/docker-compose.yml logs --tail=100
 
 # Filter by level
-docker-compose -f docker/docker-compose.yml logs | grep ERROR
+docker compose -f docker/docker-compose.yml logs | grep ERROR
 ```
 
 ### Check Health
 
 ```bash
 # Container status
-docker-compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml ps
 
 # Health check
 docker inspect --format='{{.State.Health.Status}}' yc-watcher-bot
@@ -258,11 +258,11 @@ SELECT COUNT(*) FROM notification_history;
 **Symptoms:** Bot doesn't respond to commands
 
 **Solutions:**
-1. Check bot is running: `docker-compose ps`
-2. Check logs: `docker-compose logs -f`
+1. Check bot is running: `docker compose ps`
+2. Check logs: `docker compose logs -f`
 3. Verify bot token in `.env`
 4. Verify user ID in `config/config.yaml`
-5. Restart bot: `docker-compose restart`
+5. Restart bot: `docker compose restart`
 
 ### YC API Errors
 
@@ -293,10 +293,10 @@ SELECT COUNT(*) FROM notification_history;
 **Symptoms:** Database lock or corruption
 
 **Solutions:**
-1. Stop bot: `docker-compose down`
+1. Stop bot: `docker compose down`
 2. Backup current DB: `cp data/bot.db data/bot.db.backup`
 3. Reset database: `rm data/bot.db`
-4. Start bot: `docker-compose up -d`
+4. Start bot: `docker compose up -d`
 
 ### Permission Denied
 
@@ -336,7 +336,7 @@ cp config/sa-key.json backup_$(date +%Y%m%d)/
 
 ```bash
 # Stop bot
-docker-compose -f docker/docker-compose.yml down
+docker compose -f docker/docker-compose.yml down
 
 # Restore data
 cp -r backup_20240115/data data
@@ -345,7 +345,7 @@ cp -r backup_20240115/data data
 cp backup_20240115/config.yaml config/config.yaml
 
 # Start bot
-docker-compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ## Security Best Practices
@@ -404,13 +404,13 @@ pip install -U -r requirements.txt
 pip freeze > requirements.txt
 
 # Rebuild Docker image
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## Support
 
 For issues and questions:
-1. Check logs: `docker-compose logs -f`
+1. Check logs: `docker compose logs -f`
 2. Review documentation: README.md, docs/USER.md
 3. Check technical specification: docs/SPEC.md
 4. Review architecture: docs/ARCHITECTURE.md

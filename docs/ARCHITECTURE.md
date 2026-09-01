@@ -268,7 +268,7 @@ Database Errors:
 - Manual backup before updates
 
 ### Restore Procedure
-1. Stop bot: `docker-compose down`
+1. Stop bot: `docker compose down`
 2. Restore data/ from backup
-3. Start bot: `docker-compose up -d`
+3. Start bot: `docker compose up -d`
 4. Verify operation

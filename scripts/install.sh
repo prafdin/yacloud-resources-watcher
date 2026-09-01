@@ -13,7 +13,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
+if ! docker compose version &> /dev/null; then
     echo "❌ Docker Compose is not installed. Please install Docker Compose first."
     echo "   Visit: https://docs.docker.com/compose/install/"
     exit 1
@@ -80,21 +80,21 @@ echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     echo "🔨 Building Docker image..."
-    docker-compose -f docker/docker-compose.yml build
+    docker compose -f docker/docker-compose.yml build
     
     echo ""
     echo "🚀 Starting bot..."
-    docker-compose -f docker/docker-compose.yml up -d
+    docker compose -f docker/docker-compose.yml up -d
     
     echo ""
     echo "✅ Bot started successfully!"
     echo ""
-    echo "📊 Check status with: docker-compose -f docker/docker-compose.yml ps"
-    echo "📜 View logs with: docker-compose -f docker/docker-compose.yml logs -f"
+    echo "📊 Check status with: docker compose -f docker/docker-compose.yml ps"
+    echo "📜 View logs with: docker compose -f docker/docker-compose.yml logs -f"
 else
     echo ""
     echo "⚠️  Bot not started. To start manually:"
-    echo "   docker-compose -f docker/docker-compose.yml up -d"
+    echo "   docker compose -f docker/docker-compose.yml up -d"
 fi
 
 echo ""
@@ -103,5 +103,5 @@ echo ""
 echo "Next steps:"
 echo "1. Configure .env and config/config.yaml"
 echo "2. Place SA key at config/sa-key.json"
-echo "3. Start bot: docker-compose -f docker/docker-compose.yml up -d"
+echo "3. Start bot: docker compose -f docker/docker-compose.yml up -d"
 echo "4. Message your bot in Telegram: /start"

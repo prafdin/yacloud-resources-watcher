@@ -1054,7 +1054,7 @@ yc iam key create \
 RUN useradd -m -u 1000 botuser
 USER botuser
 
-# Read-only mounts in docker-compose
+# Read-only mounts in docker compose
 volumes:
   - ./config:/app/config:ro
   - ./data:/app/data
@@ -1335,7 +1335,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
+if ! docker compose version &> /dev/null; then
     echo "❌ Docker Compose is not installed. Please install Docker Compose first."
     exit 1
 fi
@@ -1387,19 +1387,19 @@ read -p "Ready to build and start the bot? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "🔨 Building Docker image..."
-    docker-compose build
+    docker compose build
     
     echo "🚀 Starting bot..."
-    docker-compose up -d
+    docker compose up -d
     
     echo "✅ Bot started successfully!"
     echo ""
-    echo "📊 Check status with: docker-compose ps"
-    echo "📜 View logs with: docker-compose logs -f"
+    echo "📊 Check status with: docker compose ps"
+    echo "📜 View logs with: docker compose logs -f"
 else
     echo ""
     echo "⚠️  Bot not started. To start manually:"
-    echo "   docker-compose up -d"
+    echo "   docker compose up -d"
 fi
 
 echo ""
@@ -1430,21 +1430,21 @@ git pull origin main
 
 # 3. Rebuild Docker image
 echo "🔨 Rebuilding Docker image..."
-docker-compose build
+docker compose build
 
 # 4. Restart bot
 echo "🚀 Restarting bot..."
-docker-compose up -d
+docker compose up -d
 
 # 5. Verify
 echo "🔍 Verifying..."
 sleep 5
-docker-compose ps
+docker compose ps
 
 echo ""
 echo "✅ Update complete!"
 echo ""
-echo "📜 View logs with: docker-compose logs -f"
+echo "📜 View logs with: docker compose logs -f"
 ```
 
 ---
@@ -1473,7 +1473,7 @@ Telegram bot for monitoring Yandex Cloud resources with scheduled notifications.
 2. Run `./scripts/install.sh`
 3. Configure `.env` and `config/config.yaml`
 4. Place SA key at `config/sa-key.json`
-5. Start bot: `docker-compose up -d`
+5. Start bot: `docker compose up -d`
 
 ## Documentation
 
@@ -1620,7 +1620,7 @@ nano config/config.yaml
 cp /path/to/sa-key.json config/sa-key.json
 
 # Build and start
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Configuration
@@ -1659,7 +1659,7 @@ yandex_cloud:
 ## Troubleshooting
 
 ### Bot not responding
-- Check logs: `docker-compose logs -f`
+- Check logs: `docker compose logs -f`
 - Verify bot token in `.env`
 - Check user ID in config
 
@@ -1682,7 +1682,7 @@ cp -r data backup_$(date +%Y%m%d)
 ### Restore
 ```bash
 cp -r backup_20240115 data
-docker-compose restart
+docker compose restart
 ```
 ```
 

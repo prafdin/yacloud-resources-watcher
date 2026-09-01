@@ -34,27 +34,27 @@ echo ""
 
 # 3. Rebuild Docker image
 echo "🔨 Rebuilding Docker image..."
-docker-compose -f docker/docker-compose.yml build
+docker compose -f docker/docker-compose.yml build
 echo "✅ Docker image rebuilt"
 echo ""
 
 # 4. Restart bot
 echo "🚀 Restarting bot..."
-docker-compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml up -d
 echo "✅ Bot restarted"
 echo ""
 
 # 5. Verify
 echo "🔍 Verifying..."
 sleep 5
-docker-compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml ps
 
 echo ""
 echo "✅ Update complete!"
 echo ""
-echo "📜 View logs with: docker-compose -f docker/docker-compose.yml logs -f"
+echo "📜 View logs with: docker compose -f docker/docker-compose.yml logs -f"
 echo ""
 echo "If you need to rollback:"
-echo "1. Stop bot: docker-compose -f docker/docker-compose.yml down"
+echo "1. Stop bot: docker compose -f docker/docker-compose.yml down"
 echo "2. Restore data: cp -r $BACKUP_DIR/data data"
-echo "3. Start bot: docker-compose -f docker/docker-compose.yml up -d"
+echo "3. Start bot: docker compose -f docker/docker-compose.yml up -d"

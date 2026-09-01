@@ -235,7 +235,7 @@ async def test_newcommand():
 ### How to Change Scheduler Time
 
 1. Edit `config.yaml`: `scheduler.daily_report_time: "22:00"`
-2. Restart bot: `docker-compose restart`
+2. Restart bot: `docker compose restart`
 3. No code changes needed
 
 ### How to Add New Config Option
@@ -252,7 +252,7 @@ async def test_newcommand():
 # Edit config.yaml: logging.level: "DEBUG"
 
 # View logs
-docker-compose -f docker/docker-compose.yml logs -f
+docker compose -f docker/docker-compose.yml logs -f
 
 # Run locally (without Docker)
 python -m bot.main
@@ -365,7 +365,7 @@ ls -la data/
 
 # Reset database
 rm data/bot.db
-docker-compose restart
+docker compose restart
 ```
 
 ### YC API Errors

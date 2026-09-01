@@ -72,7 +72,7 @@ yc iam key create \
   --output config/sa-key.json
 
 # Build and start
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## Configuration
@@ -148,8 +148,8 @@ Reply OK to acknowledge
 Or manually:
 
 ```bash
-docker-compose -f docker/docker-compose.yml pull
-docker-compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml pull
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## Documentation
@@ -216,7 +216,7 @@ yacloud-resources-watcher/
 ## Troubleshooting
 
 ### Bot not responding
-- Check logs: `docker-compose -f docker/docker-compose.yml logs -f`
+- Check logs: `docker compose -f docker/docker-compose.yml logs -f`
 - Verify bot token in `.env`
 - Check user ID in `config/config.yaml`
 
