@@ -33,7 +33,7 @@ yc resource-manager folder add-access-binding $FOLDER_ID \
   --subject serviceAccount:$SA_ID
 
 # Verify role assignment
-yc resource-manager folder list-access-bindings $FOLDER_ID --format json | jq '.[] | select(.roleId == "viewer")'
+yc resource-manager folder list-access-bindings $FOLDER_ID --format json | jq '.[] | select(.role_id == "viewer")'
 ```
 
 ### 3. Create Authorized Key
