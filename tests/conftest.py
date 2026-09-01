@@ -1,9 +1,14 @@
 """Pytest configuration and fixtures."""
-import pytest
-from unittest.mock import AsyncMock, MagicMock
-from pathlib import Path
-import tempfile
+import json
 import os
+import tempfile
+from unittest.mock import AsyncMock
+
+import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+from storage.database import Database
 
 
 @pytest.fixture
@@ -54,17 +59,53 @@ def mock_bot():
     return bot
 
 
+@pytest.fixture(scope="session")
+def rsa_key_pair():
+    """Generate an RSA key pair for JWT tests."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    private_pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    ).decode()
+    public_pem = key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    ).decode()
+    return private_pem, public_pem
+
+
 @pytest.fixture
-def sample_sa_key():
+def sample_sa_key(rsa_key_pair):
     """Create sample service account key for testing."""
+    private_pem, public_pem = rsa_key_pair
     return {
         "id": "aje_test",
         "service_account_id": "aje_sa_test",
         "created_at": "2024-01-01T00:00:00Z",
         "key_algorithm": "RSA_2048",
-        "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----\n",
-        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----\n"
+        "public_key": public_pem,
+        "private_key": private_pem,
     }
+
+
+@pytest.fixture
+def sa_key_path(sample_sa_key):
+    """Write sample SA key to a temporary file."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as handle:
+        json.dump(sample_sa_key, handle)
+        path = handle.name
+    yield path
+    if os.path.exists(path):
+        os.unlink(path)
+
+
+@pytest.fixture
+async def database(temp_db_path):
+    """Initialized temporary database."""
+    db = Database(temp_db_path)
+    await db.init()
+    return db
 
 
 @pytest.fixture

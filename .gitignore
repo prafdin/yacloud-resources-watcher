@@ -12,7 +12,7 @@ config/sa-key.json
 data/
 
 # Python
-__py__/
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
