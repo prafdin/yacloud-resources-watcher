@@ -58,6 +58,37 @@ async def test_fetch_compute_instances(sample_compute_instances):
     assert resources[1].public_ip is None
 
 
+async def test_fetch_compute_instances_string_memory(sample_compute_instances):
+    """Test string memory value is parsed correctly."""
+    payload = {"instances": [
+        {**sample_compute_instances["instances"][0],
+         "resources": {**sample_compute_instances["instances"][0]["resources"],
+                       "memory": "4294967296"}}
+    ]}
+    client = _client_with("get_compute_instances", payload)
+    resources = await fetch_compute_instances(client, "b1g_test")
+    assert len(resources) == 1
+    assert resources[0].memory_gb == 4.0
+
+
+async def test_fetch_compute_instances_bad_record_keeps_rest(sample_compute_instances):
+    """Test a single bad record does not crash the whole list."""
+    instances = sample_compute_instances["instances"]
+    bad = {
+        **instances[0],
+        "id": "bad",
+        "resources": {**instances[0]["resources"], "memory": "not-a-number"},
+    }
+    payload = {"instances": [bad, instances[0]]}
+    client = _client_with("get_compute_instances", payload)
+    resources = await fetch_compute_instances(client, "b1g_test")
+    assert len(resources) == 2
+    assert resources[0].id == "bad"
+    assert resources[0].memory_gb is None
+    assert resources[1].id == "fhm_test1"
+    assert resources[1].memory_gb == 4.0
+
+
 async def test_fetch_compute_instances_empty():
     """Test when no instances exist."""
     client = _client_with("get_compute_instances", {"instances": []})

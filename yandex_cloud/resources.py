@@ -28,10 +28,13 @@ RUNNING_STATUSES = {"RUNNING", "ACTIVE", "REVISION_ACTIVE"}
 STOPPED_STATUSES = {"STOPPED", "INACTIVE"}
 
 
-def _bytes_to_gb(value: int | None) -> float | None:
-    if not value:
+def _bytes_to_gb(value: object) -> float | None:
+    if value is None or value == "":
         return None
-    return value / (1024**3)
+    try:
+        return int(value) / (1024**3)
+    except (TypeError, ValueError):
+        return None
 
 
 def _format_memory_gb(memory_gb: float | None) -> str | None:
