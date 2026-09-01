@@ -1,0 +1,47 @@
+# Telegram Bot Configuration
+telegram:
+  # Bot token from @BotFather (loaded from .env)
+  bot_token: "${TELEGRAM_BOT_TOKEN}"
+  
+  # Your Telegram user ID (get it from @userinfobot)
+  # Only this user can interact with the bot
+  allowed_user_id: 123456789
+
+# Scheduler Configuration
+scheduler:
+  # Time to send daily report (HH:MM format, 24-hour)
+  daily_report_time: "21:00"
+  
+  # Timezone for scheduler (IANA timezone format)
+  # Examples: Europe/Moscow, Europe/London, America/New_York, UTC
+  timezone: "Europe/Moscow"
+  
+  # Hours to wait before sending reminder if user didn't reply OK
+  reminder_hours: 2
+
+# Yandex Cloud Configuration
+yandex_cloud:
+  # Your Yandex Cloud folder ID
+  # Get it from YC console or: yc config get folder-id
+  folder_id: "b1g..."
+  
+  # Your Yandex Cloud ID
+  # Get it from YC console or: yc config get cloud-id
+  cloud_id: "b1g..."
+  
+  # Path to Service Account authorized key JSON file
+  # This file should be placed in config/ directory
+  service_account_key_path: "/app/config/sa-key.json"
+
+# Storage Configuration
+storage:
+  # Path to SQLite database file
+  database_path: "/app/data/bot.db"
+
+# Logging Configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log message format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: yc-watcher-bot
+    restart: unless-stopped
+    
+    volumes:
+      # Config files (read-only)
+      - ../config:/app/config:ro
+      
+      # Data directory (writable for SQLite)
+      - ../data:/app/data
+      
+      # Service account key (read-only)
+      - ../config/sa-key.json:/app/config/sa-key.json:ro
+    
+    env_file:
+      - ../.env
+    
+    environment:
+      - TZ=${TZ:-Europe/Moscow}
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
