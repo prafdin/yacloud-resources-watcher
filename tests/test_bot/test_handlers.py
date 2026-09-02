@@ -71,8 +71,9 @@ async def test_resources_handler_no_resources():
     handler_fn = _get_handler(router, 1)
     message = _make_message(user_id=123456)
 
-    with patch("yacloud_watcher.bot.handlers.YCClient"), \
-         patch("yacloud_watcher.bot.handlers.get_all_resources", return_value=[]):
+    with patch("yacloud_watcher.bot.handlers.YCClient"), patch(
+        "yacloud_watcher.bot.handlers.get_all_resources", return_value=[]
+    ):
         await handler_fn(message)
 
     message.answer.assert_awaited_once_with("Ресурсы не найдены.")
@@ -89,12 +90,16 @@ async def test_resources_handler_with_resources():
 
     resources = [
         Resource(
-            name="vm-1", resource_type="compute",
-            status="RUNNING", zone="ru-central1-a",
+            name="vm-1",
+            resource_type="compute",
+            status="RUNNING",
+            zone="ru-central1-a",
         ),
         Resource(
-            name="vm-2", resource_type="compute",
-            status="STOPPED", zone="ru-central1-b",
+            name="vm-2",
+            resource_type="compute",
+            status="STOPPED",
+            zone="ru-central1-b",
         ),
     ]
 

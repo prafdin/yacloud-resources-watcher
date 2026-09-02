@@ -3,10 +3,7 @@ from yacloud_watcher.cloud.models import Resource
 
 def test_resource_creation():
     resource = Resource(
-        name="vm-1",
-        resource_type="compute",
-        status="RUNNING",
-        zone="ru-central1-a"
+        name="vm-1", resource_type="compute", status="RUNNING", zone="ru-central1-a"
     )
 
     assert resource.name == "vm-1"
@@ -17,10 +14,7 @@ def test_resource_creation():
 
 def test_resource_formatting():
     resource = Resource(
-        name="vm-1",
-        resource_type="compute",
-        status="RUNNING",
-        zone="ru-central1-a"
+        name="vm-1", resource_type="compute", status="RUNNING", zone="ru-central1-a"
     )
 
     formatted = resource.format()

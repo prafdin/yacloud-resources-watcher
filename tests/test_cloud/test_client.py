@@ -12,8 +12,7 @@ def test_client_initialization():
         patch("yacloud_watcher.cloud.client.SDK") as mock_sdk,
     ):
         client = YCClient(
-            service_account_key_file="/path/to/key.json",
-            folder_id="b1g123"
+            service_account_key_file="/path/to/key.json", folder_id="b1g123"
         )
 
         assert client.folder_id == "b1g123"
@@ -22,7 +21,4 @@ def test_client_initialization():
 
 def test_client_invalid_key():
     with pytest.raises(Exception):
-        YCClient(
-            service_account_key_file="/nonexistent/key.json",
-            folder_id="b1g123"
-        )
+        YCClient(service_account_key_file="/nonexistent/key.json", folder_id="b1g123")

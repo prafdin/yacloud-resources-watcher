@@ -16,7 +16,7 @@ async def send_scheduled_notification(bot: Bot, settings: Settings) -> None:
     try:
         client = YCClient(
             service_account_key_file=settings.yc_service_account_key_file,
-            folder_id=settings.yc_folder_id
+            folder_id=settings.yc_folder_id,
         )
         resources = get_all_resources(client)
 
@@ -46,14 +46,12 @@ def setup_scheduler(scheduler: AsyncIOScheduler, bot: Bot, settings: Settings) -
     hours, minutes = settings.schedule_time.split(":")
 
     trigger = CronTrigger(
-        hour=int(hours),
-        minute=int(minutes),
-        timezone=settings.schedule_timezone
+        hour=int(hours), minute=int(minutes), timezone=settings.schedule_timezone
     )
 
     scheduler.add_job(
         send_scheduled_notification,
         trigger=trigger,
         args=[bot, settings],
-        id="daily_notification"
+        id="daily_notification",
     )
