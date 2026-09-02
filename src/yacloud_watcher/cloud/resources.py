@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from yandex.cloud.compute.v1.instance_service_pb2 import ListInstancesRequest
+
 from yacloud_watcher.cloud.models import Resource
 
 if TYPE_CHECKING:
@@ -8,7 +10,7 @@ if TYPE_CHECKING:
 
 def get_compute_instances(client: "YCClient") -> list[Resource]:
     service = client.instance_service()
-    response = service.List(folder_id=client.folder_id)
+    response = service.List(ListInstancesRequest(folder_id=client.folder_id))
 
     return [
         Resource(
