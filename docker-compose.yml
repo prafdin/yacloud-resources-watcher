@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    env_file: .env
+    volumes:
+      - ./yc-key.json:/app/yc-key.json:ro
+    restart: unless-stopped
