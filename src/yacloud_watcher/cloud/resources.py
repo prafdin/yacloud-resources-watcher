@@ -16,7 +16,7 @@ def get_compute_instances(client: "YCClient") -> list[Resource]:
         Resource(
             name=instance.name,
             resource_type="compute",
-            status=instance.status.name,
+            status=instance.DESCRIPTOR.fields_by_name["status"].enum_type.values_by_number[instance.status].name,
             zone=instance.zone_id,
         )
         for instance in response.instances
