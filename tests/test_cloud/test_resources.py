@@ -1,7 +1,7 @@
-import pytest
 from unittest.mock import Mock
-from yacloud_watcher.cloud.resources import get_all_resources
+
 from yacloud_watcher.cloud.models import Resource
+from yacloud_watcher.cloud.resources import get_all_resources
 
 
 def test_get_all_resources():
