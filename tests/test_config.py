@@ -18,6 +18,21 @@ def test_settings_from_env(monkeypatch):
     assert settings.yc_folder_id == "b1g123"
     assert settings.schedule_time == "09:00"
     assert str(settings.schedule_timezone) == "UTC"
+    assert settings.log_level == "INFO"
+
+
+def test_settings_log_level_custom(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test_token")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USER_IDS", "123")
+    monkeypatch.setenv("YC_SERVICE_ACCOUNT_KEY_FILE", "/path/to/key.json")
+    monkeypatch.setenv("YC_FOLDER_ID", "b1g123")
+    monkeypatch.setenv("SCHEDULE_TIME", "09:00")
+    monkeypatch.setenv("SCHEDULE_TIMEZONE", "UTC")
+    monkeypatch.setenv("LOG_LEVEL", "DEBUG")
+
+    settings = Settings()
+
+    assert settings.log_level == "DEBUG"
 
 
 def test_settings_invalid_timezone(monkeypatch):

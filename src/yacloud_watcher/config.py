@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     schedule_time: str
     schedule_timezone: ZoneInfo
 
+    log_level: str = "INFO"
+
     @classmethod
     def settings_customise_sources(
         cls,

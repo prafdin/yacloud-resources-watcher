@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -5,6 +7,8 @@ from apscheduler.triggers.cron import CronTrigger
 from yacloud_watcher.cloud.client import YCClient
 from yacloud_watcher.cloud.resources import get_all_resources
 from yacloud_watcher.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 def create_scheduler() -> AsyncIOScheduler:
@@ -38,8 +42,12 @@ async def send_scheduled_notification(bot: Bot, settings: Settings) -> None:
 
         for user_id in settings.telegram_allowed_user_ids:
             await bot.send_message(user_id, message)
-    except Exception as e:
-        print(f"Error sending scheduled notification: {e}")
+        logger.info(
+            "Scheduled notification sent to %d users",
+            len(settings.telegram_allowed_user_ids),
+        )
+    except Exception:
+        logger.exception("Failed to send scheduled notification")
 
 
 def setup_scheduler(scheduler: AsyncIOScheduler, bot: Bot, settings: Settings) -> None:

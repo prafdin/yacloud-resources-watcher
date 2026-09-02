@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -6,12 +8,18 @@ from yacloud_watcher.cloud.client import YCClient
 from yacloud_watcher.cloud.resources import get_all_resources
 from yacloud_watcher.config import Settings
 
+logger = logging.getLogger(__name__)
+
 
 def register_handlers(router: Router, settings: Settings) -> None:
     @router.message(Command("start"))
     async def cmd_start(message: Message) -> None:
         if message.from_user.id not in settings.telegram_allowed_user_ids:
+            logger.warning(
+                "Unauthorized access attempt from user_id=%s", message.from_user.id
+            )
             return
+        logger.info("User %s executed /start", message.from_user.id)
         await message.answer(
             "Привет! Я бот для мониторинга ресурсов Yandex Cloud.\n\n"
             "Доступные команды:\n"
@@ -22,7 +30,11 @@ def register_handlers(router: Router, settings: Settings) -> None:
     @router.message(Command("resources"))
     async def cmd_resources(message: Message) -> None:
         if message.from_user.id not in settings.telegram_allowed_user_ids:
+            logger.warning(
+                "Unauthorized access attempt from user_id=%s", message.from_user.id
+            )
             return
+        logger.info("User %s executed /resources", message.from_user.id)
         try:
             client = YCClient(
                 service_account_key_file=settings.yc_service_account_key_file,
@@ -47,13 +59,20 @@ def register_handlers(router: Router, settings: Settings) -> None:
                 response += "\n"
 
             await message.answer(response.strip())
-        except Exception as e:
-            await message.answer(f"Ошибка при получении ресурсов: {e}")
+        except Exception:
+            logger.exception(
+                "Failed to fetch resources for user %s", message.from_user.id
+            )
+            await message.answer("Не удалось получить ресурсы. Попробуйте позже.")
 
     @router.message(Command("help"))
     async def cmd_help(message: Message) -> None:
         if message.from_user.id not in settings.telegram_allowed_user_ids:
+            logger.warning(
+                "Unauthorized access attempt from user_id=%s", message.from_user.id
+            )
             return
+        logger.info("User %s executed /help", message.from_user.id)
         await message.answer(
             "Бот для мониторинга ресурсов Yandex Cloud.\n\n"
             "Команды:\n"

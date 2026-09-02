@@ -148,13 +148,15 @@ async def test_resources_handler_error():
             "yacloud_watcher.bot.handlers.get_all_resources",
             side_effect=RuntimeError("connection failed"),
         ),
+        patch("yacloud_watcher.bot.handlers.logger") as mock_logger,
     ):
         await handler_fn(message)
 
     message.answer.assert_awaited_once()
     text = message.answer.call_args[0][0]
-    assert "Ошибка" in text
-    assert "connection failed" in text
+    assert "Не удалось получить ресурсы" in text
+    assert "connection failed" not in text
+    mock_logger.exception.assert_called_once()
 
 
 @pytest.mark.asyncio
