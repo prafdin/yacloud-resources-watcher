@@ -22,8 +22,6 @@ def _resource_line(resource: Resource) -> str:
 def _daily_expense_line(expense: DailyExpense) -> str:
     if expense.failed:
         return f"💰 Spent today: ⚠️ fetch failed: {expense.error}"
-    if expense.amount is None or expense.currency is None:
-        return "💰 Spent today: N/A"
     return f"💰 Spent today: {expense.amount:.2f} {expense.currency}"
 
 
