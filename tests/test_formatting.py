@@ -37,14 +37,14 @@ def test_populated_section_lists_resource_names():
     assert "🖥 Compute instances (2)\n  • web-1\n  • web-2" in format_snapshot(snapshot)
 
 
-def test_empty_section_shows_none_placeholder():
+def test_empty_section_is_omitted_from_report():
     snapshot = _snapshot(
         [
             ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),
             ResourceGroup("disks", "💾 Disks", ()),
         ]
     )
-    assert "💾 Disks (0)\n  (none)" in format_snapshot(snapshot)
+    assert "Disks" not in format_snapshot(snapshot)
 
 
 def test_failed_section_shows_error_and_no_body():

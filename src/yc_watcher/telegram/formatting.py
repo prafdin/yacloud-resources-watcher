@@ -35,7 +35,9 @@ def format_snapshot(snapshot: InventorySnapshot) -> str:
         if group.failed:
             sections.append(f"{group.title} — ⚠️ fetch failed: {group.error}")
             continue
-        body = "\n".join(_resource_line(resource) for resource in group.resources) or "  (none)"
+        if not group.resources:
+            continue
+        body = "\n".join(_resource_line(resource) for resource in group.resources)
         sections.append(f"{group.title} ({group.count})\n{body}")
     lines.append("\n\n".join(sections))
     if snapshot.any_failed:
