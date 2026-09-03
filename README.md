@@ -70,3 +70,42 @@ python -m pytest
 ```
 
 All external I/O is mocked; the suite needs no network and no credentials.
+
+## Deploy
+
+Pushing a `vX.Y.Z` git tag runs `.github/workflows/deploy.yml`: it builds the
+image, pushes it to `ghcr.io/prafdin/yacloud-resources-watcher`, then SSHes into
+the server and runs `docker compose pull && up -d` in `~/yc-watcher`. The app is
+stateless, so an update is just a container restart.
+
+```
+# version lives in pyproject.toml
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+**Rollback** (image tags persist in GHCR):
+
+```
+ssh <user>@<host> "cd yc-watcher && APP_VERSION=v0.1.0 docker compose up -d"
+```
+
+### One-time setup
+
+Repo **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+|---|---|
+| `DEPLOY_SSH_HOST` | server IP / hostname |
+| `DEPLOY_SSH_USER` | SSH login |
+| `DEPLOY_SSH_KEY` | deploy private key, including the `BEGIN`/`END` lines |
+
+On the server:
+
+1. Install Docker Engine + the Compose v2 plugin; add the deploy user to the
+   `docker` group and re-login.
+2. `mkdir -p ~/yc-watcher`, then place `~/yc-watcher/.env` and
+   `~/yc-watcher/sa-key.json` (see `.env.example`).
+3. Add the deploy key's public half to `~/.ssh/authorized_keys`; open inbound TCP 22.
+
+After the first `build-and-push`, set the GHCR package visibility to **Public**
+(repo → Packages → package settings), then re-run the `deploy` job.
