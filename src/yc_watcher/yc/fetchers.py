@@ -10,6 +10,7 @@ from typing import Any, Callable
 
 from yandex.cloud.compute.v1.disk_service_pb2 import ListDisksRequest
 from yandex.cloud.compute.v1.disk_service_pb2_grpc import DiskServiceStub
+from yandex.cloud.compute.v1.instance_pb2 import Instance
 from yandex.cloud.compute.v1.instance_service_pb2 import ListInstancesRequest
 from yandex.cloud.compute.v1.instance_service_pb2_grpc import InstanceServiceStub
 from yandex.cloud.mdb.clickhouse.v1.cluster_service_pb2 import (
@@ -56,6 +57,12 @@ from yandex.cloud.vpc.v1.subnet_service_pb2_grpc import SubnetServiceStub
 from yc_watcher.models import Resource
 from yc_watcher.yc.pagination import list_all
 
+
+def _instance_status(item: Any) -> str:
+    name = Instance.Status.Name(item.status)
+    return "unknown" if name == "STATUS_UNSPECIFIED" else name.lower()
+
+
 PAGE_SIZE = 1000
 
 
@@ -66,6 +73,7 @@ class FetcherSpec:
     stub_ctor: Callable[[Any], Any]
     request_cls: Callable[..., Any]
     items_attr: str
+    status_of: Callable[[Any], str] | None = None
 
     def fetch(self, client) -> list[Resource]:
         stub = client.stub(self.stub_ctor)
@@ -76,11 +84,18 @@ class FetcherSpec:
             ),
             lambda response: getattr(response, self.items_attr),
         )
-        return [Resource(id=item.id or item.name, name=item.name or item.id) for item in items]
+        return [
+            Resource(
+                id=item.id or item.name,
+                name=item.name or item.id,
+                status=self.status_of(item) if self.status_of else None,
+            )
+            for item in items
+        ]
 
 
 FETCHERS: tuple[FetcherSpec, ...] = (
-    FetcherSpec("compute_instances", "🖥 Compute instances", InstanceServiceStub, ListInstancesRequest, "instances"),
+    FetcherSpec("compute_instances", "🖥 Compute instances", InstanceServiceStub, ListInstancesRequest, "instances", status_of=_instance_status),
     FetcherSpec("disks", "💾 Disks", DiskServiceStub, ListDisksRequest, "disks"),
     FetcherSpec("vpc_networks", "🌐 VPC networks", NetworkServiceStub, ListNetworksRequest, "networks"),
     FetcherSpec("vpc_subnets", "🧩 VPC subnets", SubnetServiceStub, ListSubnetsRequest, "subnets"),

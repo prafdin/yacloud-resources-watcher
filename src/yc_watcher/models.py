@@ -13,6 +13,7 @@ from datetime import datetime
 class Resource:
     id: str
     name: str
+    status: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
