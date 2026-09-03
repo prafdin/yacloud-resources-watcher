@@ -4,7 +4,7 @@ Deliberately emits no Markdown or HTML so arbitrary resource names never need
 escaping; long reports are cut into sendable chunks on line boundaries.
 """
 
-from yc_watcher.models import InventorySnapshot, Resource
+from yc_watcher.models import DailyExpense, InventorySnapshot, Resource
 
 TELEGRAM_LIMIT = 4096
 INCOMPLETE_NOTE = (
@@ -19,12 +19,21 @@ def _resource_line(resource: Resource) -> str:
     return f"  • {resource.name}"
 
 
+def _daily_expense_line(expense: DailyExpense) -> str:
+    if expense.failed:
+        return f"💰 Spent today: ⚠️ fetch failed: {expense.error}"
+    if expense.amount is None or expense.currency is None:
+        return "💰 Spent today: N/A"
+    return f"💰 Spent today: {expense.amount:.2f} {expense.currency}"
+
+
 def format_snapshot(snapshot: InventorySnapshot) -> str:
     lines = [
         "📊 Yandex Cloud inventory",
         f"Folder: {snapshot.folder_id}",
         f"Generated: {snapshot.generated_at.strftime('%Y-%m-%d %H:%M')} UTC",
         f"Total resources: {snapshot.total}",
+        _daily_expense_line(snapshot.daily_expense),
         "",
     ]
     if snapshot.is_empty:

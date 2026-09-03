@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from yc_watcher.models import DailyExpense, InventorySnapshot, Resource, ResourceGroup
 from yc_watcher.telegram.formatting import (
@@ -10,8 +11,13 @@ from yc_watcher.telegram.formatting import (
 NOW = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
 
 
-def _snapshot(groups):
-    return InventorySnapshot("b1gfolder", NOW, tuple(groups), DailyExpense())
+def _snapshot(groups, daily_expense=None):
+    return InventorySnapshot(
+        "b1gfolder",
+        NOW,
+        tuple(groups),
+        daily_expense or DailyExpense(amount=Decimal("0"), currency="RUB"),
+    )
 
 
 def test_header_carries_folder_time_and_total():
@@ -124,3 +130,28 @@ def test_resource_without_status_has_no_status_suffix():
         [ResourceGroup("buckets", "🪣 Object Storage buckets", (Resource("b1", "my-bucket"),))]
     )
     assert "my-bucket —" not in format_snapshot(snapshot)
+
+
+def test_daily_expense_line_shows_amount_and_currency():
+    snapshot = _snapshot(
+        [ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),))],
+        daily_expense=DailyExpense(amount=Decimal("123.4"), currency="RUB"),
+    )
+    assert "Total resources: 1\n💰 Spent today: 123.40 RUB" in format_snapshot(snapshot)
+
+
+def test_daily_expense_failure_shows_an_inline_note():
+    snapshot = _snapshot(
+        [ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),))],
+        daily_expense=DailyExpense(error="PERMISSION_DENIED"),
+    )
+    text = format_snapshot(snapshot)
+    assert "💰 Spent today: ⚠️ fetch failed: PERMISSION_DENIED" in text
+
+
+def test_daily_expense_failure_does_not_trigger_the_counts_trailer():
+    snapshot = _snapshot(
+        [ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),))],
+        daily_expense=DailyExpense(error="PERMISSION_DENIED"),
+    )
+    assert "counts above may be incomplete" not in format_snapshot(snapshot)
