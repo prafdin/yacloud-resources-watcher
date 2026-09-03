@@ -1,0 +1,10 @@
+services:
+  bot:
+    build: .
+    container_name: yc-watcher
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      YC_SA_KEY_FILE: /secrets/sa-key.json
+    volumes:
+      - ./sa-key.json:/secrets/sa-key.json:ro
