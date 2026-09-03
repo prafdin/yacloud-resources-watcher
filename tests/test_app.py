@@ -13,6 +13,7 @@ def _settings():
         log_level="INFO",
         yc_sa_key_file="/secrets/sa-key.json",
         yc_folder_id="b1gfolder",
+        yc_billing_account_id="acc-1",
         telegram_bot_token=SimpleNamespace(get_secret_value=lambda: "123:abc"),
         allowed_user_ids=frozenset({42}),
         telegram_chat_id=555,
@@ -75,3 +76,12 @@ async def test_run_builds_the_client_from_the_configured_key(patched):
 async def test_run_closes_the_bot_session(patched):
     await app_module.run(_settings())
     patched.bot.session.close.assert_awaited_once()
+
+
+async def test_run_builds_the_scheduler_with_the_billing_account_id(patched):
+    settings = _settings()
+    await app_module.run(settings)
+    assert (
+        app_module.build_scheduler.call_args.kwargs["billing_account_id"]
+        == settings.yc_billing_account_id
+    )

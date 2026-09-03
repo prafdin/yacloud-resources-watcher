@@ -39,6 +39,7 @@ async def run(settings: Settings | None = None) -> None:
         hour=settings.schedule_hour,
         minute=settings.schedule_minute,
         timezone=settings.schedule_timezone,
+        billing_account_id=settings.yc_billing_account_id,
     )
 
     scheduler.start()
