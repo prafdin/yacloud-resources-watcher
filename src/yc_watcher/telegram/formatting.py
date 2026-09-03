@@ -4,7 +4,7 @@ Deliberately emits no Markdown or HTML so arbitrary resource names never need
 escaping; long reports are cut into sendable chunks on line boundaries.
 """
 
-from yc_watcher.models import InventorySnapshot
+from yc_watcher.models import InventorySnapshot, Resource
 
 TELEGRAM_LIMIT = 4096
 INCOMPLETE_NOTE = (
@@ -13,7 +13,7 @@ INCOMPLETE_NOTE = (
 )
 
 
-def _resource_line(resource) -> str:
+def _resource_line(resource: Resource) -> str:
     if resource.status:
         return f"  • {resource.name} — {resource.status}"
     return f"  • {resource.name}"

@@ -59,7 +59,10 @@ from yc_watcher.yc.pagination import list_all
 
 
 def _instance_status(item: Any) -> str:
-    name = Instance.Status.Name(item.status)
+    try:
+        name = Instance.Status.Name(item.status)
+    except ValueError:
+        return "unknown"
     return "unknown" if name == "STATUS_UNSPECIFIED" else name.lower()
 
 

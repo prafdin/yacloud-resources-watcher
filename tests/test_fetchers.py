@@ -53,10 +53,17 @@ def test_compute_fetcher_reports_unknown_for_unspecified_status():
     assert spec.fetch(client)[0].status == "unknown"
 
 
+def test_compute_fetcher_reports_unknown_for_out_of_range_status():
+    spec = SPECS["compute_instances"]
+    client = FakeClient({"": _page(spec.items_attr, [SimpleNamespace(id="r1", name="capusta", status=99)])})
+    assert spec.fetch(client)[0].status == "unknown"
+
+
 def test_compute_fetcher_keeps_id_and_name():
     spec = SPECS["compute_instances"]
     client = FakeClient({"": _page(spec.items_attr, [SimpleNamespace(id="r1", name="capusta", status=2)])})
-    assert (spec.fetch(client)[0].id, spec.fetch(client)[0].name) == ("r1", "capusta")
+    resource = spec.fetch(client)[0]
+    assert (resource.id, resource.name) == ("r1", "capusta")
 
 
 def test_non_compute_fetcher_leaves_status_unset():
