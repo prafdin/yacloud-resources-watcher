@@ -38,11 +38,12 @@ present). See `.env.example`.
 | `TELEGRAM_CHAT_ID` | Chat that receives the scheduled report |
 | `YC_SA_KEY_FILE` | Path to a Yandex Cloud service-account key JSON |
 | `YC_FOLDER_ID` | Folder to scan |
+| `YC_BILLING_ACCOUNT_ID` | Billing account to read today's spend from |
 | `SCHEDULE_TIME` | Daily report time, `HH:MM` |
 | `SCHEDULE_TIMEZONE` | IANA timezone for `SCHEDULE_TIME`, e.g. `Europe/Amsterdam` |
 | `LOG_LEVEL` | Root log level, default `INFO` |
 
-The service account needs `viewer` on the folder (or per-service viewer roles).
+The service account needs `viewer` on the folder (or per-service viewer roles) and `billing.accounts.viewer` on the billing account.
 
 ## Run locally
 

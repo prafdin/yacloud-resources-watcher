@@ -9,6 +9,7 @@ BASE_ENV = {
     "TELEGRAM_CHAT_ID": "111",
     "YC_SA_KEY_FILE": "/secrets/sa-key.json",
     "YC_FOLDER_ID": "b1gfolder",
+    "YC_BILLING_ACCOUNT_ID": "foo123",
     "SCHEDULE_TIME": "09:30",
     "SCHEDULE_TIMEZONE": "Europe/Amsterdam",
     "LOG_LEVEL": "INFO",
@@ -59,3 +60,9 @@ def test_missing_required_field_is_rejected():
 def test_non_integer_chat_id_is_rejected():
     with pytest.raises(ValidationError):
         _settings(BASE_ENV, TELEGRAM_CHAT_ID="not-a-number")
+
+
+def test_missing_billing_account_id_is_rejected():
+    env = {k: v for k, v in BASE_ENV.items() if k != "YC_BILLING_ACCOUNT_ID"}
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, **{k.lower(): v for k, v in env.items()})

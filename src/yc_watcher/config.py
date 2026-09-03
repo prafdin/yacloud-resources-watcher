@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     telegram_chat_id: int
     yc_sa_key_file: Path
     yc_folder_id: str
+    yc_billing_account_id: str
     schedule_time: str = "09:00"
     schedule_timezone: str = "UTC"
     log_level: str = "INFO"
