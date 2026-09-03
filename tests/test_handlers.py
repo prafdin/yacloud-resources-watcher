@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from unittest.mock import AsyncMock
 
 import pytest
@@ -24,7 +25,7 @@ async def test_start_replies_with_a_liveness_line(message):
 
 async def test_resources_sends_the_formatted_snapshot(message, monkeypatch):
     snapshot = InventorySnapshot(
-        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),), DailyExpense()
+        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),), DailyExpense(amount=Decimal("0"), currency="RUB")
     )
     monkeypatch.setattr(handlers, "collect_inventory", AsyncMock(return_value=snapshot))
     await handlers.handle_resources(message, yc_client=object())
@@ -33,7 +34,7 @@ async def test_resources_sends_the_formatted_snapshot(message, monkeypatch):
 
 async def test_resources_passes_the_injected_client(message, monkeypatch):
     collect = AsyncMock(
-        return_value=InventorySnapshot("b1gfolder", NOW, (ResourceGroup("compute", "c", ()),), DailyExpense())
+        return_value=InventorySnapshot("b1gfolder", NOW, (ResourceGroup("compute", "c", ()),), DailyExpense(amount=Decimal("0"), currency="RUB"))
     )
     monkeypatch.setattr(handlers, "collect_inventory", collect)
     client = object()
@@ -54,7 +55,7 @@ async def test_resources_reports_failure_when_collection_raises(message, monkeyp
 async def test_resources_splits_an_oversized_report_into_multiple_messages(message, monkeypatch):
     big = tuple(Resource(f"i{n}", f"instance-{n}") for n in range(2000))
     snapshot = InventorySnapshot(
-        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", big),), DailyExpense()
+        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", big),), DailyExpense(amount=Decimal("0"), currency="RUB")
     )
     monkeypatch.setattr(handlers, "collect_inventory", AsyncMock(return_value=snapshot))
     await handlers.handle_resources(message, yc_client=object())
