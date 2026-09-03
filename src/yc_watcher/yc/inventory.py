@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timezone
 
 from yc_watcher.errors import describe_error
-from yc_watcher.models import InventorySnapshot, ResourceGroup
+from yc_watcher.models import DailyExpense, InventorySnapshot, ResourceGroup
 from yc_watcher.yc.fetchers import FETCHERS
 
 log = logging.getLogger(__name__)
@@ -27,5 +27,5 @@ async def collect_inventory(client, fetchers=FETCHERS, now: datetime | None = No
 
     groups = await asyncio.gather(*(run(spec) for spec in fetchers))
     return InventorySnapshot(
-        client.folder_id, now or datetime.now(timezone.utc), tuple(groups)
+        client.folder_id, now or datetime.now(timezone.utc), tuple(groups), DailyExpense()
     )

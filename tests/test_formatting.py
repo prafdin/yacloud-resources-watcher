@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from yc_watcher.models import InventorySnapshot, Resource, ResourceGroup
+from yc_watcher.models import DailyExpense, InventorySnapshot, Resource, ResourceGroup
 from yc_watcher.telegram.formatting import (
     format_failure,
     format_snapshot,
@@ -11,7 +11,7 @@ NOW = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
 
 
 def _snapshot(groups):
-    return InventorySnapshot("b1gfolder", NOW, tuple(groups))
+    return InventorySnapshot("b1gfolder", NOW, tuple(groups), DailyExpense())
 
 
 def test_header_carries_folder_time_and_total():

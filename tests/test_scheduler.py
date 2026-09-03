@@ -5,7 +5,7 @@ from aiogram.exceptions import TelegramAPIError
 from apscheduler.triggers.cron import CronTrigger
 
 from yc_watcher import scheduler as scheduler_module
-from yc_watcher.models import InventorySnapshot, Resource, ResourceGroup
+from yc_watcher.models import DailyExpense, InventorySnapshot, Resource, ResourceGroup
 from yc_watcher.scheduler import DAILY_JOB_ID, build_scheduler, send_daily_report
 
 NOW = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
@@ -13,7 +13,7 @@ NOW = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
 
 def _snapshot():
     return InventorySnapshot(
-        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),)
+        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),), DailyExpense()
     )
 
 

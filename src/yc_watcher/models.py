@@ -7,6 +7,7 @@ touch the SDK or the network.
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,10 +34,22 @@ class ResourceGroup:
 
 
 @dataclass(frozen=True, slots=True)
+class DailyExpense:
+    amount: Decimal | None = None
+    currency: str | None = None
+    error: str | None = None
+
+    @property
+    def failed(self) -> bool:
+        return self.error is not None
+
+
+@dataclass(frozen=True, slots=True)
 class InventorySnapshot:
     folder_id: str
     generated_at: datetime
     groups: tuple[ResourceGroup, ...]
+    daily_expense: DailyExpense
 
     @property
     def total(self) -> int:

@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from yc_watcher.models import InventorySnapshot, Resource, ResourceGroup
+from yc_watcher.models import DailyExpense, InventorySnapshot, Resource, ResourceGroup
 from yc_watcher.telegram import handlers
 
 NOW = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
@@ -24,7 +24,7 @@ async def test_start_replies_with_a_liveness_line(message):
 
 async def test_resources_sends_the_formatted_snapshot(message, monkeypatch):
     snapshot = InventorySnapshot(
-        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),)
+        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),), DailyExpense()
     )
     monkeypatch.setattr(handlers, "collect_inventory", AsyncMock(return_value=snapshot))
     await handlers.handle_resources(message, yc_client=object())
@@ -33,7 +33,7 @@ async def test_resources_sends_the_formatted_snapshot(message, monkeypatch):
 
 async def test_resources_passes_the_injected_client(message, monkeypatch):
     collect = AsyncMock(
-        return_value=InventorySnapshot("b1gfolder", NOW, (ResourceGroup("compute", "c", ()),))
+        return_value=InventorySnapshot("b1gfolder", NOW, (ResourceGroup("compute", "c", ()),), DailyExpense())
     )
     monkeypatch.setattr(handlers, "collect_inventory", collect)
     client = object()
@@ -54,7 +54,7 @@ async def test_resources_reports_failure_when_collection_raises(message, monkeyp
 async def test_resources_splits_an_oversized_report_into_multiple_messages(message, monkeypatch):
     big = tuple(Resource(f"i{n}", f"instance-{n}") for n in range(2000))
     snapshot = InventorySnapshot(
-        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", big),)
+        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", big),), DailyExpense()
     )
     monkeypatch.setattr(handlers, "collect_inventory", AsyncMock(return_value=snapshot))
     await handlers.handle_resources(message, yc_client=object())
