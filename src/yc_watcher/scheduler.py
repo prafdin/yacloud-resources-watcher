@@ -21,9 +21,18 @@ log = logging.getLogger(__name__)
 DAILY_JOB_ID = "daily-inventory"
 
 
-async def send_daily_report(bot: Bot, yc_client: YcClient, chat_id: int) -> None:
+async def send_daily_report(
+    bot: Bot,
+    yc_client: YcClient,
+    chat_id: int,
+    billing_account_id: str = "",
+    tz: ZoneInfo = ZoneInfo("UTC"),
+) -> None:
     try:
-        chunks = split_message(format_snapshot(await collect_inventory(yc_client)))
+        snapshot = await collect_inventory(
+            yc_client, billing_account_id=billing_account_id, tz=tz
+        )
+        chunks = split_message(format_snapshot(snapshot))
     except Exception as error:
         log.exception("scheduled inventory build failed")
         chunks = [format_failure(str(error))]
@@ -42,13 +51,20 @@ def build_scheduler(
     hour: int,
     minute: int,
     timezone: str,
+    billing_account_id: str = "",
 ) -> AsyncIOScheduler:
     zone = ZoneInfo(timezone)
     scheduler = AsyncIOScheduler(timezone=zone)
     scheduler.add_job(
         send_daily_report,
         CronTrigger(hour=hour, minute=minute, timezone=zone),
-        kwargs={"bot": bot, "yc_client": yc_client, "chat_id": chat_id},
+        kwargs={
+            "bot": bot,
+            "yc_client": yc_client,
+            "chat_id": chat_id,
+            "billing_account_id": billing_account_id,
+            "tz": zone,
+        },
         id=DAILY_JOB_ID,
         replace_existing=True,
         misfire_grace_time=3600,

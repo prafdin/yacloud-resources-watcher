@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from unittest.mock import AsyncMock
+from zoneinfo import ZoneInfo
 
 from aiogram.exceptions import TelegramAPIError
 from apscheduler.triggers.cron import CronTrigger
@@ -13,7 +15,10 @@ NOW = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
 
 def _snapshot():
     return InventorySnapshot(
-        "b1gfolder", NOW, (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),), DailyExpense()
+        "b1gfolder",
+        NOW,
+        (ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),)),),
+        DailyExpense(amount=Decimal("12.34"), currency="RUB"),
     )
 
 
@@ -62,3 +67,21 @@ async def test_send_daily_report_survives_a_telegram_delivery_error(monkeypatch)
     bot.send_message.side_effect = TelegramAPIError(method=None, message="chat not found")
     await send_daily_report(bot, yc_client=object(), chat_id=555)
     assert bot.send_message.await_count == 1
+
+
+async def test_send_daily_report_passes_billing_account_id_and_timezone(monkeypatch):
+    monkeypatch.setattr(scheduler_module, "collect_inventory", AsyncMock(return_value=_snapshot()))
+    bot = AsyncMock()
+    await send_daily_report(
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("Europe/Amsterdam")
+    )
+    kwargs = scheduler_module.collect_inventory.await_args.kwargs
+    assert (kwargs["billing_account_id"], kwargs["tz"]) == ("acc-1", ZoneInfo("Europe/Amsterdam"))
+
+
+def test_daily_job_receives_the_billing_account_id_and_zone():
+    job = _build(billing_account_id="acc-1", timezone="Europe/Amsterdam").get_job(DAILY_JOB_ID)
+    assert (job.kwargs["billing_account_id"], job.kwargs["tz"]) == (
+        "acc-1",
+        ZoneInfo("Europe/Amsterdam"),
+    )
