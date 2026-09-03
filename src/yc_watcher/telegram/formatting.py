@@ -13,6 +13,12 @@ INCOMPLETE_NOTE = (
 )
 
 
+def _resource_line(resource) -> str:
+    if resource.status:
+        return f"  • {resource.name} — {resource.status}"
+    return f"  • {resource.name}"
+
+
 def format_snapshot(snapshot: InventorySnapshot) -> str:
     lines = [
         "📊 Yandex Cloud inventory",
@@ -29,7 +35,7 @@ def format_snapshot(snapshot: InventorySnapshot) -> str:
         if group.failed:
             sections.append(f"{group.title} — ⚠️ fetch failed: {group.error}")
             continue
-        body = "\n".join(f"  • {resource.name}" for resource in group.resources) or "  (none)"
+        body = "\n".join(_resource_line(resource) for resource in group.resources) or "  (none)"
         sections.append(f"{group.title} ({group.count})\n{body}")
     lines.append("\n\n".join(sections))
     if snapshot.any_failed:

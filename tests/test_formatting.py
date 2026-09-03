@@ -103,3 +103,24 @@ def test_split_message_preserves_order():
     body = "\n".join(f"line-{n}" for n in range(50))
     chunks = split_message(body, limit=60)
     assert chunks[0].startswith("line-0")
+
+
+def test_instance_line_shows_running_status():
+    snapshot = _snapshot(
+        [ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "capusta", "running"),))]
+    )
+    assert "  • capusta — running" in format_snapshot(snapshot)
+
+
+def test_instance_line_shows_stopped_status():
+    snapshot = _snapshot(
+        [ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "capusta", "stopped"),))]
+    )
+    assert "  • capusta — stopped" in format_snapshot(snapshot)
+
+
+def test_resource_without_status_has_no_status_suffix():
+    snapshot = _snapshot(
+        [ResourceGroup("buckets", "🪣 Object Storage buckets", (Resource("b1", "my-bucket"),))]
+    )
+    assert "my-bucket —" not in format_snapshot(snapshot)
