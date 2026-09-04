@@ -2,11 +2,13 @@
 
 ``/start`` confirms the process is alive; ``/resources`` builds a snapshot on
 demand and sends it, falling back to a one-line error if the collection itself
-fails. The Yandex Cloud client is injected as dispatcher workflow data. A fresh
+fails. The Yandex Cloud client, the billing account id and the timezone are
+injected as dispatcher workflow data. A fresh
 router is built per process via ``build_router`` so tests stay isolated.
 """
 
 import logging
+from zoneinfo import ZoneInfo
 
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
@@ -26,9 +28,11 @@ async def handle_start(message: Message) -> None:
     await message.answer(LIVENESS)
 
 
-async def handle_resources(message: Message, yc_client: YcClient) -> None:
+async def handle_resources(
+    message: Message, yc_client: YcClient, billing_account_id: str, tz: ZoneInfo
+) -> None:
     try:
-        snapshot = await collect_inventory(yc_client)
+        snapshot = await collect_inventory(yc_client, billing_account_id=billing_account_id, tz=tz)
     except Exception as error:
         log.exception("/resources failed to build the snapshot")
         await message.answer(format_failure(str(error)))

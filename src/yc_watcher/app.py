@@ -20,6 +20,8 @@ from yc_watcher.yc.client import YcClient
 def build_dispatcher(settings: Settings, yc_client: YcClient) -> Dispatcher:
     dispatcher = Dispatcher()
     dispatcher["yc_client"] = yc_client
+    dispatcher["billing_account_id"] = settings.yc_billing_account_id
+    dispatcher["tz"] = settings.tzinfo
     dispatcher.message.outer_middleware(WhitelistMiddleware(settings.allowed_user_ids))
     dispatcher.include_router(build_router())
     return dispatcher

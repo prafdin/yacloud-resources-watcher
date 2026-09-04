@@ -45,7 +45,9 @@ def test_daily_job_uses_a_cron_trigger_at_the_configured_time():
 async def test_send_daily_report_delivers_the_snapshot_to_the_chat(monkeypatch):
     monkeypatch.setattr(scheduler_module, "collect_inventory", AsyncMock(return_value=_snapshot()))
     bot = AsyncMock()
-    await send_daily_report(bot, yc_client=object(), chat_id=555)
+    await send_daily_report(
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+    )
     assert bot.send_message.await_args_list[0].args[0] == 555
     assert "web-1" in bot.send_message.await_args_list[0].args[1]
 
@@ -55,7 +57,9 @@ async def test_send_daily_report_falls_back_to_an_error_message(monkeypatch):
         scheduler_module, "collect_inventory", AsyncMock(side_effect=RuntimeError("bad key"))
     )
     bot = AsyncMock()
-    await send_daily_report(bot, yc_client=object(), chat_id=555)
+    await send_daily_report(
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+    )
     assert bot.send_message.await_args.args[1] == (
         "⚠️ Could not build the inventory report: bad key"
     )
@@ -65,7 +69,9 @@ async def test_send_daily_report_survives_a_telegram_delivery_error(monkeypatch)
     monkeypatch.setattr(scheduler_module, "collect_inventory", AsyncMock(return_value=_snapshot()))
     bot = AsyncMock()
     bot.send_message.side_effect = TelegramAPIError(method=None, message="chat not found")
-    await send_daily_report(bot, yc_client=object(), chat_id=555)
+    await send_daily_report(
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+    )
     assert bot.send_message.await_count == 1
 
 

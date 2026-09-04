@@ -53,14 +53,22 @@ class FakeBilling:
 
 async def test_successful_fetcher_populates_its_group():
     spec = FakeSpec("compute", result=[Resource("i1", "web-1")])
-    snapshot = await collect_inventory(client=_client(), fetchers=(spec,), now=NOW)
+    snapshot = await collect_inventory(
+        client=_client(), fetchers=(spec,), now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+    )
     assert snapshot.groups[0].resources == (Resource("i1", "web-1"),)
 
 
 async def test_failing_fetcher_becomes_a_failed_group_without_aborting_others():
     good = FakeSpec("compute", result=[Resource("i1", "web-1")])
     bad = FakeSpec("disks", raises=FakeRpcError())
-    snapshot = await collect_inventory(client=_client(), fetchers=(good, bad), now=NOW)
+    snapshot = await collect_inventory(
+        client=_client(),
+        fetchers=(good, bad),
+        now=NOW,
+        billing_account_id="acc-1",
+        tz=ZoneInfo("UTC"),
+    )
     failed = {group.key: group for group in snapshot.groups}["disks"]
     assert failed.error == "PERMISSION_DENIED: denied"
     assert failed.resources == ()
@@ -69,25 +77,45 @@ async def test_failing_fetcher_becomes_a_failed_group_without_aborting_others():
 async def test_good_group_survives_a_sibling_failure():
     good = FakeSpec("compute", result=[Resource("i1", "web-1")])
     bad = FakeSpec("disks", raises=FakeRpcError())
-    snapshot = await collect_inventory(client=_client(), fetchers=(good, bad), now=NOW)
+    snapshot = await collect_inventory(
+        client=_client(),
+        fetchers=(good, bad),
+        now=NOW,
+        billing_account_id="acc-1",
+        tz=ZoneInfo("UTC"),
+    )
     assert {group.key: group for group in snapshot.groups}["compute"].count == 1
 
 
 async def test_every_fetcher_runs_once():
     specs = [FakeSpec(f"type-{n}") for n in range(4)]
-    await collect_inventory(client=_client(), fetchers=tuple(specs), now=NOW)
+    await collect_inventory(
+        client=_client(),
+        fetchers=tuple(specs),
+        now=NOW,
+        billing_account_id="acc-1",
+        tz=ZoneInfo("UTC"),
+    )
     assert [spec.calls for spec in specs] == [1, 1, 1, 1]
 
 
 async def test_snapshot_uses_injected_timestamp_and_folder():
     client = type("C", (), {"folder_id": "b1gfolder"})()
-    snapshot = await collect_inventory(client=client, fetchers=(FakeSpec("compute"),), now=NOW)
+    snapshot = await collect_inventory(
+        client=client,
+        fetchers=(FakeSpec("compute"),),
+        now=NOW,
+        billing_account_id="acc-1",
+        tz=ZoneInfo("UTC"),
+    )
     assert (snapshot.folder_id, snapshot.generated_at) == ("b1gfolder", NOW)
 
 
 async def test_group_order_follows_fetcher_order():
     specs = (FakeSpec("b"), FakeSpec("a"), FakeSpec("c"))
-    snapshot = await collect_inventory(client=_client(), fetchers=specs, now=NOW)
+    snapshot = await collect_inventory(
+        client=_client(), fetchers=specs, now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+    )
     assert [group.key for group in snapshot.groups] == ["b", "a", "c"]
 
 

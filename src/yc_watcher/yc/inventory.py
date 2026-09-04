@@ -23,8 +23,9 @@ async def collect_inventory(
     client,
     fetchers=FETCHERS,
     now: datetime | None = None,
-    billing_account_id: str = "",
-    tz: ZoneInfo = ZoneInfo("UTC"),
+    *,
+    billing_account_id: str,
+    tz: ZoneInfo,
 ) -> InventorySnapshot:
     resolved_now = now or datetime.now(timezone.utc)
 

@@ -25,8 +25,8 @@ async def send_daily_report(
     bot: Bot,
     yc_client: YcClient,
     chat_id: int,
-    billing_account_id: str = "",
-    tz: ZoneInfo = ZoneInfo("UTC"),
+    billing_account_id: str,
+    tz: ZoneInfo,
 ) -> None:
     try:
         snapshot = await collect_inventory(
