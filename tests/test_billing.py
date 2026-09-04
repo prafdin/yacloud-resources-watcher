@@ -69,6 +69,13 @@ def test_sends_the_day_window_as_the_request_timestamps():
     ) == (DAY_START, DAY_END)
 
 
+def test_treats_an_unset_expense_as_zero():
+    response = FolderUsageReportResponse(currency=RUB)
+    client = FakeClient(FakeStub(response))
+    result = fetch_daily_expense(client, "acc-1", DAY_START, DAY_END)
+    assert result == DailyExpense(amount=Decimal("0"), currency="RUB")
+
+
 def test_propagates_errors_from_the_stub_without_catching_them():
     client = FakeClient(FakeStub(raises=RuntimeError("boom")))
     with pytest.raises(RuntimeError, match="boom"):

@@ -35,5 +35,5 @@ def fetch_daily_expense(
     )
     response = stub.GetFolderUsageReport(request)
     return DailyExpense(
-        amount=Decimal(response.expense.value), currency=Currency.Name(response.currency)
+        amount=Decimal(response.expense.value or "0"), currency=Currency.Name(response.currency)
     )
