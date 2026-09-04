@@ -79,6 +79,10 @@ image, pushes it to `ghcr.io/prafdin/yacloud-resources-watcher`, then SSHes into
 the server and runs `docker compose pull && up -d` in `~/yc-watcher`. The app is
 stateless, so an update is just a container restart.
 
+Deployments upgrading past this release must add `YC_BILLING_ACCOUNT_ID` to
+`~/yc-watcher/.env` before pulling the new image — it's a required setting
+and the container will fail to start (a pydantic `ValidationError`) without it.
+
 ```
 # version lives in pyproject.toml
 git tag v0.1.0 && git push origin v0.1.0
