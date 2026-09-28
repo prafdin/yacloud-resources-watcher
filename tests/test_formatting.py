@@ -137,7 +137,7 @@ def test_daily_expense_line_shows_amount_and_currency():
         [ResourceGroup("compute", "🖥 Compute instances", (Resource("i1", "web-1"),))],
         daily_expense=DailyExpense(amount=Decimal("123.4"), currency="RUB"),
     )
-    assert "Total resources: 1\n💰 Spent today: 123.40 RUB" in format_snapshot(snapshot)
+    assert "Total resources: 1\n💰 Spent yesterday: 123.40 RUB" in format_snapshot(snapshot)
 
 
 def test_daily_expense_failure_shows_an_inline_note():
@@ -146,7 +146,7 @@ def test_daily_expense_failure_shows_an_inline_note():
         daily_expense=DailyExpense(error="PERMISSION_DENIED"),
     )
     text = format_snapshot(snapshot)
-    assert "💰 Spent today: ⚠️ fetch failed: PERMISSION_DENIED" in text
+    assert "💰 Spent yesterday: ⚠️ fetch failed: PERMISSION_DENIED" in text
 
 
 def test_daily_expense_failure_does_not_trigger_the_counts_trailer():

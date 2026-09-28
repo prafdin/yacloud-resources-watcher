@@ -149,13 +149,28 @@ async def test_billing_receives_the_configured_account_id(monkeypatch):
     assert fake.calls[0][1] == "acc-1"
 
 
-async def test_billing_day_window_is_local_midnight_through_now(monkeypatch):
+async def test_billing_window_is_the_previous_local_day(monkeypatch):
     fake = FakeBilling(result=DailyExpense())
     monkeypatch.setattr(inventory_module, "fetch_daily_expense", fake)
-    now = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
     tz = ZoneInfo("Asia/Yekaterinburg")
+    now = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
     await collect_inventory(
         client=_client(), fetchers=(), now=now, billing_account_id="acc-1", tz=tz
     )
     _, _, day_start, day_end = fake.calls[0]
-    assert (day_start, day_end) == (datetime(2026, 9, 3, 0, 0, tzinfo=tz), now.astimezone(tz))
+    assert (day_start, day_end) == (
+        datetime(2026, 9, 2, 0, 0, tzinfo=tz),
+        datetime(2026, 9, 3, 0, 0, tzinfo=tz),
+    ), "billing window is not the previous local day"
+
+
+async def test_billing_window_follows_the_local_date_not_the_utc_date(monkeypatch):
+    fake = FakeBilling(result=DailyExpense())
+    monkeypatch.setattr(inventory_module, "fetch_daily_expense", fake)
+    tz = ZoneInfo("Asia/Yekaterinburg")
+    now = datetime(2026, 9, 2, 21, 30, tzinfo=timezone.utc)
+    await collect_inventory(
+        client=_client(), fetchers=(), now=now, billing_account_id="acc-1", tz=tz
+    )
+    start = fake.calls[0][2]
+    assert start == datetime(2026, 9, 2, 0, 0, tzinfo=tz), "window did not start at local yesterday"

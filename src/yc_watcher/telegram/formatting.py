@@ -21,8 +21,8 @@ def _resource_line(resource: Resource) -> str:
 
 def _daily_expense_line(expense: DailyExpense) -> str:
     if expense.failed:
-        return f"💰 Spent today: ⚠️ fetch failed: {expense.error}"
-    return f"💰 Spent today: {expense.amount:.2f} {expense.currency}"
+        return f"💰 Spent yesterday: ⚠️ fetch failed: {expense.error}"
+    return f"💰 Spent yesterday: {expense.amount:.2f} {expense.currency}"
 
 
 def format_snapshot(snapshot: InventorySnapshot) -> str:

@@ -8,7 +8,7 @@ under the same isolation.
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from yc_watcher.errors import describe_error
@@ -38,11 +38,16 @@ async def collect_inventory(
             return ResourceGroup(spec.key, spec.title, (), error=describe_error(error))
 
     async def run_billing() -> DailyExpense:
-        local_now = resolved_now.astimezone(tz)
-        day_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = resolved_now.astimezone(tz).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         try:
             return await asyncio.to_thread(
-                fetch_daily_expense, client, billing_account_id, day_start, local_now
+                fetch_daily_expense,
+                client,
+                billing_account_id,
+                day_end - timedelta(days=1),
+                day_end,
             )
         except Exception as error:
             log.exception("daily expense fetch failed")

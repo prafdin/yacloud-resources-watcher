@@ -1,4 +1,4 @@
-"""Fetches how much has been spent on the folder's billing account today.
+"""Fetches how much has been spent on the folder's billing account over a day window.
 
 Mirrors ``FetcherSpec.fetch`` from ``yc/fetchers.py``: one stub, one request,
 one response. This raises on failure and leaves catching it to the caller,
