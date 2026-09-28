@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
-from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -22,7 +21,6 @@ def _settings():
         schedule_minute=30,
         schedule_time="09:30",
         schedule_timezone="UTC",
-        tzinfo=ZoneInfo("UTC"),
     )
 
 
@@ -32,13 +30,14 @@ def test_build_dispatcher_injects_the_client():
     assert dispatcher["yc_client"] is client
 
 
-def test_build_dispatcher_injects_the_billing_account_id_and_timezone():
-    settings = _settings()
-    dispatcher = app_module.build_dispatcher(settings, object())
-    assert (dispatcher["billing_account_id"], dispatcher["tz"]) == (
-        settings.yc_billing_account_id,
-        settings.tzinfo,
-    )
+def test_build_dispatcher_injects_the_billing_account_id():
+    dispatcher = app_module.build_dispatcher(_settings(), object())
+    assert dispatcher["billing_account_id"] == "acc-1", "dispatcher lacks the billing account"
+
+
+def test_build_dispatcher_does_not_inject_the_zone():
+    dispatcher = app_module.build_dispatcher(_settings(), object())
+    assert "tz" not in dispatcher.workflow_data, "dispatcher still injects the schedule zone"
 
 
 def test_build_dispatcher_injects_what_help_describes():

@@ -4,13 +4,12 @@
 the commands; ``/resources`` builds a snapshot on demand and sends it, falling
 back to a one-line error if the collection itself fails. ``COMMANDS`` is the
 single list that both ``/help`` and the Telegram command menu are built from.
-The Yandex Cloud client, the billing account id, the timezone and the schedule
-are injected as dispatcher workflow data. A fresh
+The Yandex Cloud client, the billing account id and the schedule are
+injected as dispatcher workflow data. A fresh
 router is built per process via ``build_router`` so tests stay isolated.
 """
 
 import logging
-from zoneinfo import ZoneInfo
 
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
@@ -51,11 +50,9 @@ async def handle_help(
     )
 
 
-async def handle_resources(
-    message: Message, yc_client: YcClient, billing_account_id: str, tz: ZoneInfo
-) -> None:
+async def handle_resources(message: Message, yc_client: YcClient, billing_account_id: str) -> None:
     try:
-        snapshot = await collect_inventory(yc_client, billing_account_id=billing_account_id, tz=tz)
+        snapshot = await collect_inventory(yc_client, billing_account_id=billing_account_id)
     except Exception as error:
         log.exception("/resources failed to build the snapshot")
         await message.answer(format_failure(str(error)))

@@ -3,13 +3,12 @@
 This is the single place where the blocking gRPC fetchers are pushed onto worker
 threads and awaited together; a failure in one fetcher is captured on its group
 and never cancels the rest. The billing fetch rides along in the same gather,
-under the same isolation.
+under the same isolation and always reports yesterday in UTC.
 """
 
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 
 from yc_watcher.errors import describe_error
 from yc_watcher.models import DailyExpense, InventorySnapshot, ResourceGroup
@@ -25,7 +24,6 @@ async def collect_inventory(
     now: datetime | None = None,
     *,
     billing_account_id: str,
-    tz: ZoneInfo,
 ) -> InventorySnapshot:
     resolved_now = now or datetime.now(timezone.utc)
 
@@ -38,16 +36,10 @@ async def collect_inventory(
             return ResourceGroup(spec.key, spec.title, (), error=describe_error(error))
 
     async def run_billing() -> DailyExpense:
-        day_end = resolved_now.astimezone(tz).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        yesterday = resolved_now.astimezone(timezone.utc).date() - timedelta(days=1)
         try:
             return await asyncio.to_thread(
-                fetch_daily_expense,
-                client,
-                billing_account_id,
-                day_end - timedelta(days=1),
-                day_end,
+                fetch_daily_expense, client, billing_account_id, yesterday
             )
         except Exception as error:
             log.exception("daily expense fetch failed")

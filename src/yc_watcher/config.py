@@ -61,10 +61,6 @@ class Settings(BaseSettings):
     def schedule_minute(self) -> int:
         return int(self.schedule_time.split(":")[1])
 
-    @property
-    def tzinfo(self) -> ZoneInfo:
-        return ZoneInfo(self.schedule_timezone)
-
 
 @lru_cache
 def load_settings() -> Settings:

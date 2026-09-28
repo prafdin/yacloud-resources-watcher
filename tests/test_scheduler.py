@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock
-from zoneinfo import ZoneInfo
 
 from aiogram.exceptions import TelegramAPIError
 from apscheduler.triggers.cron import CronTrigger
@@ -46,7 +45,7 @@ async def test_send_daily_report_delivers_the_snapshot_to_the_chat(monkeypatch):
     monkeypatch.setattr(scheduler_module, "collect_inventory", AsyncMock(return_value=_snapshot()))
     bot = AsyncMock()
     await send_daily_report(
-        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1"
     )
     assert bot.send_message.await_args_list[0].args[0] == 555
     assert "web-1" in bot.send_message.await_args_list[0].args[1]
@@ -58,7 +57,7 @@ async def test_send_daily_report_falls_back_to_an_error_message(monkeypatch):
     )
     bot = AsyncMock()
     await send_daily_report(
-        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1"
     )
     assert bot.send_message.await_args.args[1] == (
         "⚠️ Could not build the inventory report: bad key"
@@ -70,24 +69,19 @@ async def test_send_daily_report_survives_a_telegram_delivery_error(monkeypatch)
     bot = AsyncMock()
     bot.send_message.side_effect = TelegramAPIError(method=None, message="chat not found")
     await send_daily_report(
-        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1"
     )
     assert bot.send_message.await_count == 1
 
 
-async def test_send_daily_report_passes_billing_account_id_and_timezone(monkeypatch):
+async def test_send_daily_report_passes_only_the_billing_account_id(monkeypatch):
     monkeypatch.setattr(scheduler_module, "collect_inventory", AsyncMock(return_value=_snapshot()))
     bot = AsyncMock()
-    await send_daily_report(
-        bot, yc_client=object(), chat_id=555, billing_account_id="acc-1", tz=ZoneInfo("Europe/Amsterdam")
-    )
+    await send_daily_report(bot, yc_client=object(), chat_id=555, billing_account_id="acc-7q")
     kwargs = scheduler_module.collect_inventory.await_args.kwargs
-    assert (kwargs["billing_account_id"], kwargs["tz"]) == ("acc-1", ZoneInfo("Europe/Amsterdam"))
+    assert kwargs == {"billing_account_id": "acc-7q"}, "report passes more than the billing account"
 
 
-def test_daily_job_receives_the_billing_account_id_and_zone():
+def test_daily_job_does_not_receive_the_zone():
     job = _build(billing_account_id="acc-1", timezone="Europe/Amsterdam").get_job(DAILY_JOB_ID)
-    assert (job.kwargs["billing_account_id"], job.kwargs["tz"]) == (
-        "acc-1",
-        ZoneInfo("Europe/Amsterdam"),
-    )
+    assert "tz" not in job.kwargs, "daily job still receives the schedule zone"

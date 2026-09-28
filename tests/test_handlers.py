@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock
-from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -30,7 +29,7 @@ async def test_resources_sends_the_formatted_snapshot(message, monkeypatch):
     )
     monkeypatch.setattr(handlers, "collect_inventory", AsyncMock(return_value=snapshot))
     await handlers.handle_resources(
-        message, yc_client=object(), billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        message, yc_client=object(), billing_account_id="acc-1"
     )
     assert "web-1" in message.answer.await_args_list[0].args[0]
 
@@ -42,12 +41,12 @@ async def test_resources_passes_the_injected_client(message, monkeypatch):
     monkeypatch.setattr(handlers, "collect_inventory", collect)
     client = object()
     await handlers.handle_resources(
-        message, yc_client=client, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        message, yc_client=client, billing_account_id="acc-1"
     )
     assert collect.await_args.args[0] is client
 
 
-async def test_resources_passes_billing_account_id_and_timezone(message, monkeypatch):
+async def test_resources_passes_only_the_billing_account_id(message, monkeypatch):
     collect = AsyncMock(
         return_value=InventorySnapshot(
             "b1gfolder", NOW, (), DailyExpense(amount=Decimal("0"), currency="RUB")
@@ -55,10 +54,10 @@ async def test_resources_passes_billing_account_id_and_timezone(message, monkeyp
     )
     monkeypatch.setattr(handlers, "collect_inventory", collect)
     await handlers.handle_resources(
-        message, yc_client=object(), billing_account_id="acc-1", tz=ZoneInfo("Europe/Amsterdam")
+        message, yc_client=object(), billing_account_id="acc-7q"
     )
     kwargs = collect.await_args.kwargs
-    assert (kwargs["billing_account_id"], kwargs["tz"]) == ("acc-1", ZoneInfo("Europe/Amsterdam"))
+    assert kwargs == {"billing_account_id": "acc-7q"}, "resources passes more than the account"
 
 
 async def test_resources_reports_failure_when_collection_raises(message, monkeypatch):
@@ -66,7 +65,7 @@ async def test_resources_reports_failure_when_collection_raises(message, monkeyp
         handlers, "collect_inventory", AsyncMock(side_effect=RuntimeError("token expired"))
     )
     await handlers.handle_resources(
-        message, yc_client=object(), billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        message, yc_client=object(), billing_account_id="acc-1"
     )
     assert message.answer.await_args.args[0] == (
         "⚠️ Could not build the inventory report: token expired"
@@ -80,7 +79,7 @@ async def test_resources_splits_an_oversized_report_into_multiple_messages(messa
     )
     monkeypatch.setattr(handlers, "collect_inventory", AsyncMock(return_value=snapshot))
     await handlers.handle_resources(
-        message, yc_client=object(), billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        message, yc_client=object(), billing_account_id="acc-1"
     )
     assert message.answer.await_count > 1
 

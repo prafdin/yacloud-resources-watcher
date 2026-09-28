@@ -1,6 +1,5 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 import grpc
 
@@ -44,8 +43,8 @@ class FakeBilling:
         self._raises = raises
         self.calls = []
 
-    def __call__(self, client, billing_account_id, day_start, day_end):
-        self.calls.append((client, billing_account_id, day_start, day_end))
+    def __call__(self, client, billing_account_id, day):
+        self.calls.append((client, billing_account_id, day))
         if self._raises is not None:
             raise self._raises
         return self._result
@@ -54,7 +53,7 @@ class FakeBilling:
 async def test_successful_fetcher_populates_its_group():
     spec = FakeSpec("compute", result=[Resource("i1", "web-1")])
     snapshot = await collect_inventory(
-        client=_client(), fetchers=(spec,), now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        client=_client(), fetchers=(spec,), now=NOW, billing_account_id="acc-1"
     )
     assert snapshot.groups[0].resources == (Resource("i1", "web-1"),)
 
@@ -67,7 +66,6 @@ async def test_failing_fetcher_becomes_a_failed_group_without_aborting_others():
         fetchers=(good, bad),
         now=NOW,
         billing_account_id="acc-1",
-        tz=ZoneInfo("UTC"),
     )
     failed = {group.key: group for group in snapshot.groups}["disks"]
     assert failed.error == "PERMISSION_DENIED: denied"
@@ -82,7 +80,6 @@ async def test_good_group_survives_a_sibling_failure():
         fetchers=(good, bad),
         now=NOW,
         billing_account_id="acc-1",
-        tz=ZoneInfo("UTC"),
     )
     assert {group.key: group for group in snapshot.groups}["compute"].count == 1
 
@@ -94,7 +91,6 @@ async def test_every_fetcher_runs_once():
         fetchers=tuple(specs),
         now=NOW,
         billing_account_id="acc-1",
-        tz=ZoneInfo("UTC"),
     )
     assert [spec.calls for spec in specs] == [1, 1, 1, 1]
 
@@ -106,7 +102,6 @@ async def test_snapshot_uses_injected_timestamp_and_folder():
         fetchers=(FakeSpec("compute"),),
         now=NOW,
         billing_account_id="acc-1",
-        tz=ZoneInfo("UTC"),
     )
     assert (snapshot.folder_id, snapshot.generated_at) == ("b1gfolder", NOW)
 
@@ -114,7 +109,7 @@ async def test_snapshot_uses_injected_timestamp_and_folder():
 async def test_group_order_follows_fetcher_order():
     specs = (FakeSpec("b"), FakeSpec("a"), FakeSpec("c"))
     snapshot = await collect_inventory(
-        client=_client(), fetchers=specs, now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        client=_client(), fetchers=specs, now=NOW, billing_account_id="acc-1"
     )
     assert [group.key for group in snapshot.groups] == ["b", "a", "c"]
 
@@ -123,7 +118,7 @@ async def test_billing_success_populates_daily_expense(monkeypatch):
     expense = DailyExpense(amount=Decimal("12.34"), currency="RUB")
     monkeypatch.setattr(inventory_module, "fetch_daily_expense", FakeBilling(result=expense))
     snapshot = await collect_inventory(
-        client=_client(), fetchers=(), now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        client=_client(), fetchers=(), now=NOW, billing_account_id="acc-1"
     )
     assert snapshot.daily_expense == expense
 
@@ -134,7 +129,7 @@ async def test_billing_failure_becomes_an_error_without_aborting_resources(monke
     )
     good = FakeSpec("compute", result=[Resource("i1", "web-1")])
     snapshot = await collect_inventory(
-        client=_client(), fetchers=(good,), now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        client=_client(), fetchers=(good,), now=NOW, billing_account_id="acc-1"
     )
     assert snapshot.daily_expense.error == "RuntimeError: boom"
     assert snapshot.groups[0].resources == (Resource("i1", "web-1"),)
@@ -144,33 +139,22 @@ async def test_billing_receives_the_configured_account_id(monkeypatch):
     fake = FakeBilling(result=DailyExpense())
     monkeypatch.setattr(inventory_module, "fetch_daily_expense", fake)
     await collect_inventory(
-        client=_client(), fetchers=(), now=NOW, billing_account_id="acc-1", tz=ZoneInfo("UTC")
+        client=_client(), fetchers=(), now=NOW, billing_account_id="acc-1"
     )
     assert fake.calls[0][1] == "acc-1"
 
 
-async def test_billing_window_is_the_previous_local_day(monkeypatch):
+async def test_billing_day_is_yesterday_in_utc(monkeypatch):
     fake = FakeBilling(result=DailyExpense())
     monkeypatch.setattr(inventory_module, "fetch_daily_expense", fake)
-    tz = ZoneInfo("Asia/Yekaterinburg")
-    now = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
-    await collect_inventory(
-        client=_client(), fetchers=(), now=now, billing_account_id="acc-1", tz=tz
-    )
-    _, _, day_start, day_end = fake.calls[0]
-    assert (day_start, day_end) == (
-        datetime(2026, 9, 2, 0, 0, tzinfo=tz),
-        datetime(2026, 9, 3, 0, 0, tzinfo=tz),
-    ), "billing window is not the previous local day"
+    now = datetime(2026, 3, 17, 0, 40, tzinfo=timezone.utc)
+    await collect_inventory(client=_client(), fetchers=(), now=now, billing_account_id="acc-1")
+    assert fake.calls[0][2] == date(2026, 3, 16), "billing day is not yesterday in UTC"
 
 
-async def test_billing_window_follows_the_local_date_not_the_utc_date(monkeypatch):
+async def test_billing_day_ignores_the_offset_of_now(monkeypatch):
     fake = FakeBilling(result=DailyExpense())
     monkeypatch.setattr(inventory_module, "fetch_daily_expense", fake)
-    tz = ZoneInfo("Asia/Yekaterinburg")
-    now = datetime(2026, 9, 2, 21, 30, tzinfo=timezone.utc)
-    await collect_inventory(
-        client=_client(), fetchers=(), now=now, billing_account_id="acc-1", tz=tz
-    )
-    start = fake.calls[0][2]
-    assert start == datetime(2026, 9, 2, 0, 0, tzinfo=tz), "window did not start at local yesterday"
+    now = datetime(2026, 3, 17, 4, 10, tzinfo=timezone(timedelta(hours=5)))
+    await collect_inventory(client=_client(), fetchers=(), now=now, billing_account_id="acc-1")
+    assert fake.calls[0][2] == date(2026, 3, 15), "billing day follows a local date, not UTC"

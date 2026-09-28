@@ -26,12 +26,9 @@ async def send_daily_report(
     yc_client: YcClient,
     chat_id: int,
     billing_account_id: str,
-    tz: ZoneInfo,
 ) -> None:
     try:
-        snapshot = await collect_inventory(
-            yc_client, billing_account_id=billing_account_id, tz=tz
-        )
+        snapshot = await collect_inventory(yc_client, billing_account_id=billing_account_id)
         chunks = split_message(format_snapshot(snapshot))
     except Exception as error:
         log.exception("scheduled inventory build failed")
@@ -63,7 +60,6 @@ def build_scheduler(
             "yc_client": yc_client,
             "chat_id": chat_id,
             "billing_account_id": billing_account_id,
-            "tz": zone,
         },
         id=DAILY_JOB_ID,
         replace_existing=True,

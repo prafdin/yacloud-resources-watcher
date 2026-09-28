@@ -22,7 +22,6 @@ def build_dispatcher(settings: Settings, yc_client: YcClient) -> Dispatcher:
     dispatcher = Dispatcher()
     dispatcher["yc_client"] = yc_client
     dispatcher["billing_account_id"] = settings.yc_billing_account_id
-    dispatcher["tz"] = settings.tzinfo
     dispatcher["schedule_time"] = settings.schedule_time
     dispatcher["schedule_timezone"] = settings.schedule_timezone
     dispatcher["folder_id"] = settings.yc_folder_id

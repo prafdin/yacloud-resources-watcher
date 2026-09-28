@@ -1,6 +1,6 @@
-"""Fetches how much has been spent on the folder's billing account for a date window."""
+"""Fetches how much has been spent on the folder's billing account for one UTC day."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 import pytest
@@ -11,8 +11,7 @@ from yandex.cloud.billing.usage_records.v1.consumption_core_service_pb2 import (
 from yc_watcher.models import DailyExpense
 from yc_watcher.yc.billing import fetch_daily_expense
 
-DAY_START = datetime(2026, 9, 3, 0, 0, tzinfo=timezone.utc)
-DAY_END = datetime(2026, 9, 3, 9, 0, tzinfo=timezone.utc)
+DAY = date(2026, 9, 3)
 RUB = 1  # Currency.RUB
 
 
@@ -46,37 +45,39 @@ class FakeClient:
 
 def test_returns_expense_amount_and_currency():
     client = FakeClient(FakeStub(_response(expense="123.45", currency=RUB)))
-    result = fetch_daily_expense(client, "acc-1", DAY_START, DAY_END)
+    result = fetch_daily_expense(client, "acc-1", DAY)
     assert result == DailyExpense(amount=Decimal("123.45"), currency="RUB")
 
 
 def test_sends_billing_account_id_and_folder_id_in_the_request():
     stub = FakeStub(_response())
     client = FakeClient(stub, folder_id="b1gfolder")
-    fetch_daily_expense(client, "acc-1", DAY_START, DAY_END)
+    fetch_daily_expense(client, "acc-1", DAY)
     request = stub.requests[0]
     assert (request.billing_account_id, list(request.folder_ids)) == ("acc-1", ["b1gfolder"])
 
 
-def test_sends_the_day_window_as_the_request_timestamps():
+def test_sends_the_day_as_both_inclusive_request_dates():
     stub = FakeStub(_response())
-    client = FakeClient(stub)
-    fetch_daily_expense(client, "acc-1", DAY_START, DAY_END)
+    fetch_daily_expense(FakeClient(stub), "acc-1", date(2026, 3, 17))
     request = stub.requests[0]
     assert (
         request.start_date.ToDatetime(tzinfo=timezone.utc),
         request.end_date.ToDatetime(tzinfo=timezone.utc),
-    ) == (DAY_START, DAY_END)
+    ) == (
+        datetime(2026, 3, 17, tzinfo=timezone.utc),
+        datetime(2026, 3, 17, tzinfo=timezone.utc),
+    ), "request does not cover exactly one UTC day"
 
 
 def test_treats_an_unset_expense_as_zero():
     response = FolderUsageReportResponse(currency=RUB)
     client = FakeClient(FakeStub(response))
-    result = fetch_daily_expense(client, "acc-1", DAY_START, DAY_END)
+    result = fetch_daily_expense(client, "acc-1", DAY)
     assert result == DailyExpense(amount=Decimal("0"), currency="RUB")
 
 
 def test_propagates_errors_from_the_stub_without_catching_them():
     client = FakeClient(FakeStub(raises=RuntimeError("boom")))
     with pytest.raises(RuntimeError, match="boom"):
-        fetch_daily_expense(client, "acc-1", DAY_START, DAY_END)
+        fetch_daily_expense(client, "acc-1", DAY)
