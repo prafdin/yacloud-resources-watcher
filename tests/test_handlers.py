@@ -83,3 +83,40 @@ async def test_resources_splits_an_oversized_report_into_multiple_messages(messa
         message, yc_client=object(), billing_account_id="acc-1", tz=ZoneInfo("UTC")
     )
     assert message.answer.await_count > 1
+
+
+async def test_help_lists_the_resources_command(message):
+    await handlers.handle_help(
+        message, schedule_time="07:45", schedule_timezone="Asia/Tokyo", folder_id="b1gzx9"
+    )
+    assert "/resources" in message.answer.await_args.args[0], "help does not list /resources"
+
+
+async def test_help_shows_the_configured_schedule(message):
+    await handlers.handle_help(
+        message, schedule_time="07:45", schedule_timezone="Asia/Tokyo", folder_id="b1gzx9"
+    )
+    assert "07:45 (Asia/Tokyo)" in message.answer.await_args.args[0], "help hides the schedule"
+
+
+async def test_help_shows_the_watched_folder(message):
+    await handlers.handle_help(
+        message, schedule_time="07:45", schedule_timezone="Asia/Tokyo", folder_id="b1gzx9"
+    )
+    assert "b1gzx9" in message.answer.await_args.args[0], "help hides the folder"
+
+
+async def test_start_points_to_help(message):
+    await handlers.handle_start(message)
+    assert "/help" in message.answer.await_args.args[0], "start does not mention /help"
+
+
+def test_router_answers_the_help_command():
+    router = handlers.build_router()
+    commands = {
+        command
+        for handler in router.message.handlers
+        for flt in handler.filters
+        for command in getattr(flt.callback, "commands", ())
+    }
+    assert "help" in commands, "router does not answer /help"

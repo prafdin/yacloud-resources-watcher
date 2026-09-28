@@ -20,6 +20,7 @@ def _settings():
         telegram_chat_id=555,
         schedule_hour=9,
         schedule_minute=30,
+        schedule_time="09:30",
         schedule_timezone="UTC",
         tzinfo=ZoneInfo("UTC"),
     )
@@ -40,6 +41,16 @@ def test_build_dispatcher_injects_the_billing_account_id_and_timezone():
     )
 
 
+def test_build_dispatcher_injects_what_help_describes():
+    settings = _settings()
+    dispatcher = app_module.build_dispatcher(settings, object())
+    assert (
+        dispatcher["schedule_time"],
+        dispatcher["schedule_timezone"],
+        dispatcher["folder_id"],
+    ) == ("09:30", "UTC", "b1gfolder"), "dispatcher lacks the data /help needs"
+
+
 def test_build_dispatcher_registers_the_command_router():
     dispatcher = app_module.build_dispatcher(_settings(), object())
     assert [r.name for r in dispatcher.sub_routers] == [ROUTER_NAME]
@@ -57,6 +68,7 @@ def patched(monkeypatch):
     scheduler = MagicMock()
     bot = MagicMock()
     bot.session.close = AsyncMock()
+    bot.set_my_commands = AsyncMock()
     monkeypatch.setattr(app_module, "configure_logging", MagicMock())
     monkeypatch.setattr(app_module.YcClient, "from_key_file", MagicMock(return_value=object()))
     monkeypatch.setattr(app_module, "Bot", MagicMock(return_value=bot))
@@ -96,3 +108,9 @@ async def test_run_builds_the_scheduler_with_the_billing_account_id(patched):
         app_module.build_scheduler.call_args.kwargs["billing_account_id"]
         == settings.yc_billing_account_id
     )
+
+
+async def test_run_publishes_the_command_menu(patched):
+    await app_module.run(_settings())
+    menu = [c.command for c in patched.bot.set_my_commands.await_args.args[0]]
+    assert menu == ["resources", "help", "start"], "command menu is not published"

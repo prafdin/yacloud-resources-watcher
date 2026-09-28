@@ -2,7 +2,7 @@
 
 A single-purpose Telegram bot. Once a day at a configured time it posts a
 point-in-time inventory of the resources that currently exist in one Yandex
-Cloud folder, grouped by type. It also answers `/resources` on demand.
+Cloud folder, grouped by type. It also answers `/resources` on demand and `/help` with a short description.
 
 No diffing, no database, no acknowledgement flow — just "what is in the folder
 right now".
@@ -22,6 +22,7 @@ a failed section; the rest of the report is still delivered.
 |---|---|
 | `/start` | Liveness reply |
 | `/resources` | Build and send the inventory now |
+| `/help` | Describe the schedule and list the commands |
 
 Only Telegram user IDs in `TELEGRAM_ALLOWED_USER_IDS` are answered. The daily
 report is sent to `TELEGRAM_CHAT_ID`.
